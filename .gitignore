@@ -12,10 +12,11 @@ logs/
 *.sqlite3
 *.log
 
-# OAuth credentials, API keys, certificates, and tokens
-*secret*.json
-*credential*.json
-*token*.json
+# OAuth credentials, API keys, certificates, and tokens (case-insensitive names)
+*[Ss][Ee][Cc][Rr][Ee][Tt]*.json
+*[Cc][Rr][Ee][Dd][Ee][Nn][Tt][Ii][Aa][Ll]*.json
+*[Tt][Oo][Kk][Ee][Nn]*.json
+*[Aa][Pp][Ii]*[Kk][Ee][Yy]*.json
 *.pem
 *.key
 *.p12

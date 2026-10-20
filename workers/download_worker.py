@@ -5,7 +5,7 @@
 * A random pause (sleep_interval_min..max seconds) separates downloads.
 * Recoverable errors are retried a bounded number of times with exponential
   backoff (1, 2, 4… minutes, capped at 30).
-* Rate limits / bot checks pause ALL YouTube activity (queue_control) and the
+* Rate limits / verification checks pause automated platform requests and the
   job goes back to pending untouched; nothing resumes until the user does.
 * The user's Start/Pause switch is stored in SQLite. After a restart the queue
   comes back paused so nothing starts downloading unexpectedly.
@@ -124,7 +124,7 @@ class DownloadWorker:
 
     # -- loop --------------------------------------------------------------
 
-    def _youtube_paused(self) -> bool:
+    def _platform_paused(self) -> bool:
         stamp, value = self._pause_cache
         if time.monotonic() - stamp > 1.0:
             value = queue_control.is_paused()
@@ -164,7 +164,7 @@ class DownloadWorker:
         with self._lock:
             if download_id in self._cancel_ids:
                 return "cancel"
-        if self._stop.is_set() or not self.is_running_cached() or self._youtube_paused():
+        if self._stop.is_set() or not self.is_running_cached() or self._platform_paused():
             return "pause"
         return None
 
@@ -270,8 +270,8 @@ class DownloadWorker:
                 if self._consecutive_forbidden >= FORBIDDEN_PAUSE_THRESHOLD:
                     self._pause_everything(
                         job, "forbidden",
-                        f"YouTube refused {self._consecutive_forbidden} downloads in a row (HTTP 403). "
-                        "This often means the connection is being blocked. The queue is paused; "
+                        f"The platform refused {self._consecutive_forbidden} downloads in a row "
+                        "(HTTP 403). This often means the connection is being blocked. The queue is paused; "
                         "wait before resuming and keep yt-dlp updated.", detail)
                 else:
                     self._handle_failure(job, settings, info.kind, True, info.message, detail)

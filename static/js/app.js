@@ -73,6 +73,11 @@ function formatDate(yyyymmdd) {
   return `${yyyymmdd.slice(0, 4)}-${yyyymmdd.slice(4, 6)}-${yyyymmdd.slice(6, 8)}`;
 }
 
+function platformLabel(platform) {
+  return ({ youtube: "YouTube", instagram: "Instagram", facebook: "Facebook",
+    tiktok: "TikTok", x: "X (Twitter)" })[platform] || platform || "YouTube";
+}
+
 // ---- download folder ----------------------------------------------------
 
 // The page cannot see local paths itself, so the local backend lists drives and
@@ -220,12 +225,12 @@ async function refreshPause() {
 document.getElementById("pause-resume").addEventListener("click", async () => {
   const banner = document.getElementById("pause-cooldown").textContent;
   if (banner.startsWith("Suggested wait: about") &&
-      !confirm("YouTube recently rate-limited this connection. Resuming early may extend the block. Resume anyway?")) {
+      !confirm("A platform recently rate-limited this connection. Resuming early may extend the block. Resume anyway?")) {
     return;
   }
   try {
     renderPause(await api("/api/queue/resume", { method: "POST" }));
-    toast("YouTube requests resumed.");
+    toast("Platform requests resumed.");
   } catch (err) { toast(err.message, "error"); }
 });
 

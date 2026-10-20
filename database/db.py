@@ -147,6 +147,12 @@ MIGRATIONS = [
     );
     CREATE INDEX idx_uploads_queue ON uploads(status, position);
     """,
+    # v5: identify non-YouTube media while retaining the existing queue and
+    # upload relationships. Existing video rows remain YouTube by default.
+    """
+    ALTER TABLE videos ADD COLUMN platform TEXT NOT NULL DEFAULT 'youtube';
+    ALTER TABLE videos ADD COLUMN external_id TEXT;
+    """,
 ]
 
 

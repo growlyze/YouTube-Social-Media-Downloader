@@ -33,7 +33,7 @@ function uploadRow(item) {
     el("img", { class: "dl-thumb", src: item.thumbnail, alt: "", loading: "lazy", referrerpolicy: "no-referrer" }),
     el("div", { class: "dl-main" },
       el("div", { class: "dl-title" }, item.title || item.video_id),
-      el("div", { class: "muted small" }, `${item.channel_name || ""} → Drive folder “${item.drive_folder_name || item.drive_folder_id}”`),
+      el("div", { class: "muted small" }, `${platformLabel(item.platform)} · ${item.channel_name || ""} → Drive folder “${item.drive_folder_name || item.drive_folder_id}”`),
       active ? el("div", { class: "progress" }, bar) : null,
       el("div", { class: "small" }, el("span", { class: `pill pill-${item.status}` }, item.status), " ", bits.join(" · ")),
       item.error_message ? el("div", { class: "small " + (item.status === "failed" ? "text-bad" : "muted") }, item.error_message) : null,

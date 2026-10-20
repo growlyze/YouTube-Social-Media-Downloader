@@ -1,4 +1,4 @@
-"""Local YouTube bulk downloader: Flask entry point.
+"""Local media downloader: Flask entry point.
 
 Run with:  .venv\\Scripts\\python app.py   then open http://127.0.0.1:5000
 """
@@ -114,7 +114,10 @@ def create_app(db_path=None, start_workers=True, discovery_worker=None, download
             resp.headers["Content-Security-Policy"] = (
                 "default-src 'self'; script-src 'self'; style-src 'self'; "
                 "img-src 'self' data: https://i.ytimg.com https://*.ggpht.com "
-                "https://*.googleusercontent.com; connect-src 'self'; frame-ancestors 'none'"
+                "https://*.googleusercontent.com https://*.cdninstagram.com https://*.fbcdn.net "
+                "https://*.fbsbx.com https://*.tiktokcdn.com https://*.byteoversea.com "
+                "https://*.ibytedtos.com https://pbs.twimg.com; "
+                "connect-src 'self'; frame-ancestors 'none'"
             )
         return resp
 

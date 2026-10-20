@@ -11,6 +11,9 @@ from routes.channels import _filter_from
 from services import queue_control
 from services import runtime as runtime_tools
 from services.download_service import is_inside
+from services.errors import classify_error
+from services.media_platforms import MediaInputError, normalize_media_url
+from services.media_service import resolve_media_url
 from services.youtube_service import InputError
 
 bp = Blueprint("downloads", __name__)
@@ -82,6 +85,71 @@ def enqueue():
         repository.set_selected(result["queued_ids"], False)
     _worker().wake()
     result["queue_running"] = _worker().is_running()
+    result.pop("queued_ids")
+    return jsonify(result)
+
+
+@bp.post("/downloads/enqueue-url")
+def enqueue_url():
+    """Resolve one or more supported media URLs and enqueue their public items."""
+    body = request.get_json(silent=True)
+    if not isinstance(body, dict):
+        raise InputError("Request body must be a JSON object.")
+    values = body.get("urls")
+    if values is None and isinstance(body.get("url"), str):
+        values = body["url"].splitlines()
+    if not isinstance(values, list) or not all(isinstance(value, str) for value in values):
+        raise InputError("'urls' must be a list of URLs.")
+    urls = [value.strip() for value in values if value.strip()]
+    if not urls:
+        raise InputError("Enter at least one media URL.")
+    if len(urls) > 20:
+        raise InputError("Submit no more than 20 URLs at a time.")
+
+    settings = repository.get_settings()
+    media = {}
+    errors, warnings = [], []
+    for index, value in enumerate(urls):
+        adapter = None
+        try:
+            normalized, adapter = normalize_media_url(value)
+            resolved = resolve_media_url(normalized, settings)
+            for item in resolved["items"]:
+                media[item["video_id"]] = item
+            warnings.extend(f"{adapter.label}: {warning}" for warning in resolved.get("warnings", []))
+            if resolved["truncated"]:
+                warnings.append(f"{adapter.label}: collection limited to the first 100 items.")
+        except MediaInputError as exc:
+            errors.append({"platform": adapter.label if adapter else "URL", "message": str(exc)})
+        except Exception as exc:
+            info = classify_error(exc)
+            message = info.message if info.kind != "unknown" else (
+                "Could not inspect this link. It may be unavailable, require sign-in, or be "
+                "unsupported by yt-dlp.")
+            label = adapter.label if adapter else "Media link"
+            current_app.logger.error("Could not inspect %s media (%s)", label, type(exc).__name__)
+            if info.pause_queue:
+                queue_control.pause(info.kind, info.message,
+                                    settings.get("rate_limit_cooldown_minutes", 60))
+                remaining = len(urls) - index - 1
+                if remaining:
+                    warnings.append(f"Stopped after the platform limit; {remaining} URL(s) were not inspected.")
+                    errors.append({"platform": label, "message": message})
+                    break
+            errors.append({"platform": label, "message": message})
+
+    if not media:
+        return jsonify(added=0, errors=errors, warnings=warnings)
+
+    repository.upsert_videos(None, list(media.values()))
+    result = repository.enqueue_downloads(
+        list(media), include_shorts=settings.get("include_shorts", True),
+        include_live=settings.get("include_streams", False), download_dir=settings["download_dir"])
+    _worker().wake()
+    result["queue_running"] = _worker().is_running()
+    result["expanded"] = len(media)
+    result["errors"] = errors
+    result["warnings"] = warnings
     result.pop("queued_ids")
     return jsonify(result)
 

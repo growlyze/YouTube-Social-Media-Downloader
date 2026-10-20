@@ -1,13 +1,29 @@
 {% extends "base.html" %}
-{% block title %}Download Queue · YT Bulk Downloader{% endblock %}
+{% block title %}Download Queue · Media Downloader{% endblock %}
 {% block content %}
 <h1>Download Queue</h1>
 
 <div id="ffmpeg-warning" class="banner banner-info" hidden>
-  <div><strong>FFmpeg is not installed, so most YouTube videos cannot be downloaded.</strong>
-    YouTube now serves video and audio as separate streams that FFmpeg must merge.
+  <div><strong>FFmpeg is not installed.</strong>
+    Some platforms provide separate video and audio streams that need merging.
     Run <code>winget install Gyan.FFmpeg</code> in PowerShell; the app detects it automatically, then press “Retry all failed”.</div>
 </div>
+
+<section class="card media-url-entry">
+  <h2>Download from a link</h2>
+  <p class="muted">Paste a public YouTube, Instagram, Facebook, TikTok, or X link. Use one URL per line;
+    supported playlists and collections are expanded up to 100 items each.</p>
+  <form id="media-url-form">
+    <label for="media-urls">Media URLs</label>
+    <textarea id="media-urls" maxlength="40960" rows="3"
+      placeholder="https://www.tiktok.com/@creator/video/…&#10;https://www.instagram.com/reel/…"></textarea>
+    <div class="row">
+      <button type="submit" class="btn btn-primary" id="media-url-submit">Inspect and add to queue</button>
+      <span class="muted small">Public media only. Sign-in, private content, DRM, and access-control bypasses are not supported.</span>
+    </div>
+  </form>
+  <div id="media-url-result" class="small" role="status" aria-live="polite" hidden></div>
+</section>
 
 <section class="card queue-bar">
   <div class="queue-state">
@@ -26,7 +42,7 @@
 <section class="card">
   <h2>Queue <span id="queue-count" class="muted"></span></h2>
   <div id="queue-list" class="dl-list"></div>
-  <p id="queue-empty" class="muted" hidden>The queue is empty. Select videos in the
+  <p id="queue-empty" class="muted" hidden>The queue is empty. Paste a media link above or select videos in the
     <a href="{{ url_for('pages.library') }}">Channel Library</a> and press “Download selected”.</p>
   <div class="row">
     <button type="button" class="btn btn-small btn-danger" id="clear-pending">Remove all pending</button>

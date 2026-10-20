@@ -87,7 +87,7 @@ async function startDiscovery(url) {
   try {
     const { job, pause } = await api("/api/discover", { method: "POST", body: { url } });
     if (pause && pause.paused) {
-      toast("Queued, but YouTube requests are paused. It will start after you resume.", "warn");
+      toast("Queued, but platform requests are paused. It will start after you resume.", "warn");
     }
     watchJob(job.id);
   } catch (err) { toast(err.message, "error"); }

@@ -132,6 +132,28 @@ def test_successful_download_queues_automatic_upload(settings_dir):
     assert wakes == [True]
 
 
+def test_social_media_item_uses_existing_auto_upload_queue(settings_dir):
+    item = {
+        "video_id": "instagram_0123456789abcdef01234567",
+        "external_id": "reel-42",
+        "platform": "instagram",
+        "title": "Public reel",
+        "channel_name": "creator",
+        "url": "https://www.instagram.com/reel/reel-42/",
+        "availability": "public",
+    }
+    repository.upsert_videos(None, [item])
+    repository.update_settings({"auto_upload": True, "drive_folder_id": "folder-123"})
+    repository.enqueue_downloads([item["video_id"]])
+    done = _run_next(DownloadWorker(downloader=fake_downloader([]), pacing=False))
+
+    uploads = repository.list_uploads("queue")["items"]
+    assert done["status"] == "completed"
+    assert len(uploads) == 1
+    assert uploads[0]["video_id"] == item["video_id"]
+    assert uploads[0]["platform"] == "instagram"
+
+
 def test_existing_file_queues_automatic_upload(settings_dir):
     ids = _seed(1)
     folder = settings_dir / "Chan"
@@ -236,7 +258,7 @@ def test_missing_ffmpeg_fails_once_with_install_hint(settings_dir):
     repository.enqueue_downloads(ids)
     job = _run_next(DownloadWorker(downloader=fake_downloader([], lambda job: FFmpegRequired()), pacing=False))
     assert job["status"] == "failed" and job["error_kind"] == "ffmpeg"
-    assert job["error_message"].startswith("YouTube offers no single-file")
+    assert job["error_message"].startswith("This media has separate streams")
     assert job["error_message"].count("winget install Gyan.FFmpeg") == 1
 
 

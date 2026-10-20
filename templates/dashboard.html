@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Dashboard · YT Bulk Downloader{% endblock %}
+{% block title %}Dashboard · Media Downloader{% endblock %}
 {% block content %}
 <h1>Dashboard</h1>
 
@@ -40,7 +40,7 @@
       <dt>Quality</dt><dd>{{ settings.video_quality }} · {{ settings.video_container }}</dd>
       <dt>Google Drive</dt><dd>{{ 'Connected' if drive_connected else 'Not connected' }}{% if settings.drive_folder_name %} · folder “{{ settings.drive_folder_name }}”{% endif %}</dd>
       <dt>Automatic upload</dt><dd>{{ 'Enabled' if settings.auto_upload else 'Disabled' }}</dd>
-      <dt>YouTube requests</dt><dd>{{ 'Paused — ' ~ pause.kind if pause.paused else 'Active' }}</dd>
+      <dt>Platform requests</dt><dd>{{ 'Paused — ' ~ pause.kind if pause.paused else 'Active' }}</dd>
       <dt>FFmpeg</dt><dd>{% if runtime.ffmpeg %}Found{% else %}<span class="text-bad">Missing</span>; required for most downloads: <code>winget install Gyan.FFmpeg</code>{% endif %}</dd>
       <dt>JS runtime</dt><dd>{{ runtime.js_runtime or 'none found' }}</dd>
     </dl>

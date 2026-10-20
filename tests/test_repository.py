@@ -19,6 +19,33 @@ def test_migrations_are_idempotent(tmp_path):
     assert version == len(db.MIGRATIONS)
 
 
+def test_v5_migration_preserves_existing_youtube_rows(tmp_path):
+    path = tmp_path / "old.db"
+    conn = sqlite3.connect(path)
+    for index, migration in enumerate(db.MIGRATIONS[:4], start=1):
+        conn.executescript(migration)
+        conn.execute(f"PRAGMA user_version = {index}")
+    conn.execute("INSERT INTO videos(video_id, url) VALUES(?, ?)",
+                 ("abcdefghijk", "https://www.youtube.com/watch?v=abcdefghijk"))
+    conn.commit()
+    conn.close()
+
+    db.init_db(path)
+    row = repository.get_video("abcdefghijk")
+    assert row["platform"] == "youtube" and row["external_id"] is None
+
+
+def test_social_media_rows_can_share_the_existing_download_queue(temp_db, tmp_path):
+    item = _video("instagram_123", platform="instagram", external_id="reel-123",
+                  url="https://www.instagram.com/reel/reel-123/")
+    repository.upsert_videos(None, [item])
+    result = repository.enqueue_downloads([item["video_id"]], download_dir=str(tmp_path))
+    queued = repository.get_download_by_video(item["video_id"])
+    assert result["added"] == 1
+    assert queued["platform"] == "instagram" and queued["external_id"] == "reel-123"
+    assert queued["url"] == item["url"]
+
+
 def test_settings_defaults_and_update(temp_db):
     assert repository.get_settings()["max_concurrent_downloads"] == 1
     repository.update_settings({"sleep_requests": 2.5})

@@ -19,7 +19,7 @@ function row(item) {
   return el("tr", {},
     el("td", { class: "ellipsis" },
       el("a", { href: item.url, target: "_blank", rel: "noopener noreferrer", title: item.title }, item.title || item.video_id),
-      el("div", { class: "muted small" }, item.channel_name || "")),
+      el("div", { class: "muted small" }, `${platformLabel(item.platform)} · ${item.channel_name || ""}`)),
     el("td", {}, el("span", { class: `pill pill-${item.status}` }, item.status)),
     el("td", { class: "small" }, item.finished_at || ""),
     el("td", { class: "small wrap" + (item.status === "failed" ? " text-bad" : "") }, details),

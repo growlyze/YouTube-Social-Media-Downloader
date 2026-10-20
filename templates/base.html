@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="{{ csrf_token }}">
-  <title>{% block title %}YT Bulk Downloader{% endblock %}</title>
+  <title>{% block title %}Media Downloader{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
 </head>
 <body>
 <div class="layout">
   <nav class="sidebar">
-    <div class="brand">YT Bulk<br><span>Downloader</span></div>
+    <div class="brand">Media<br><span>Downloader</span></div>
     <a href="{{ url_for('pages.dashboard') }}" class="{{ 'active' if active == 'dashboard' }}">Dashboard</a>
     <a href="{{ url_for('pages.library') }}" class="{{ 'active' if active == 'library' }}">Channel Library</a>
     <a href="{{ url_for('pages.downloads_page') }}" class="{{ 'active' if active == 'downloads' }}">Download Queue <span id="nav-queue-count" class="nav-count" hidden></span></a>
@@ -27,7 +27,7 @@
   <main class="content">
     <div id="pause-banner" class="banner banner-warn" hidden>
       <div>
-        <strong>YouTube requests are paused.</strong>
+        <strong>Platform requests are paused.</strong>
         <span id="pause-message"></span>
         <span id="pause-cooldown" class="muted"></span>
       </div>

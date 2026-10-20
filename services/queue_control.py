@@ -1,7 +1,7 @@
-"""Global pause switch for all YouTube traffic (discovery and downloads).
+"""Global pause switch for automated platform traffic.
 
-When YouTube rate-limits or asks for bot verification, workers call
-`pause()`; nothing talks to YouTube again until the user presses Resume.
+When a platform rate-limits or requests verification, workers call `pause()`;
+nothing resumes until the user presses Resume.
 The state is stored in SQLite so a paused queue stays paused after a restart.
 """
 

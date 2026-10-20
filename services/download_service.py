@@ -19,7 +19,8 @@ from pathlib import Path
 import yt_dlp
 
 from services import runtime as runtime_tools
-from services.youtube_service import base_ydl_options
+from services.media_platforms import ADAPTER_BY_KEY, normalize_media_url
+from services.youtube_service import VIDEO_ID_RE, base_ydl_options
 
 log = logging.getLogger("download")
 
@@ -46,9 +47,8 @@ class IntegrityError(Exception):
 
 
 FFMPEG_REQUIRED_MESSAGE = (
-    "YouTube offers no single-file (video+audio) format for this video, so FFmpeg is required "
-    "to merge the separate video and audio streams. Install it with: winget install Gyan.FFmpeg "
-    "(it is detected automatically), then press Retry.")
+    "This media has separate streams that require FFmpeg to merge. Install it with: "
+    "winget install Gyan.FFmpeg (it is detected automatically), then press Retry.")
 
 
 class FFmpegRequired(Exception):
@@ -74,7 +74,10 @@ def safe_folder_name(name: str | None, fallback="Unknown channel") -> str:
 
 
 def video_folder(download_dir: Path, video: dict) -> Path:
-    folder = Path(download_dir) / safe_folder_name(video.get("channel_name"))
+    platform = video.get("platform") or "youtube"
+    adapter = ADAPTER_BY_KEY.get(platform)
+    fallback = adapter.label if adapter and platform != "youtube" else "Unknown channel"
+    folder = Path(download_dir) / safe_folder_name(video.get("channel_name"), fallback)
     if video.get("video_type") == "short":
         folder = folder / "Shorts"
     elif video.get("video_type") == "live":
@@ -87,10 +90,14 @@ def _id_glob(folder: Path, video_id: str) -> list[str]:
     return glob.glob(pattern, recursive=True)
 
 
+def _file_key(video: dict) -> str:
+    return safe_folder_name(str(video["video_id"]), "media")[:100]
+
+
 def find_existing_file(download_dir: Path, video: dict) -> Path | None:
-    """A completed file for this video id in its channel folder, if any."""
+    """A completed file for this media item in its channel folder, if any."""
     channel_dir = Path(download_dir) / safe_folder_name(video.get("channel_name"))
-    for match in _id_glob(channel_dir, video["video_id"]):
+    for match in _id_glob(channel_dir, _file_key(video)):
         path = Path(match)
         if path.is_file() and not PARTIAL_RE.search(path.name) and path.stat().st_size > 0:
             return path
@@ -99,7 +106,7 @@ def find_existing_file(download_dir: Path, video: dict) -> Path | None:
 
 def partial_files(download_dir: Path, video: dict) -> list[Path]:
     channel_dir = Path(download_dir) / safe_folder_name(video.get("channel_name"))
-    return [Path(m) for m in _id_glob(channel_dir, video["video_id"])
+    return [Path(m) for m in _id_glob(channel_dir, _file_key(video))
             if PARTIAL_RE.search(m) and Path(m).is_file()]
 
 
@@ -179,7 +186,7 @@ def verify_file(path: Path, download_dir: Path, ffprobe: str | None) -> int:
         raise IntegrityError("Downloaded file is empty.")
     if Path(str(path) + ".part").exists():
         raise IntegrityError("A .part file still exists; the download is incomplete.")
-    if ffprobe:
+    if ffprobe and path.suffix.lower() not in {".jpg", ".jpeg", ".png", ".webp", ".gif"}:
         try:
             result = subprocess.run(
                 [ffprobe, "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(path)],
@@ -211,7 +218,12 @@ def download_video(job: dict, settings: dict, progress=lambda fields: None,
     existing = find_existing_file(download_dir, job) if job.get("redownload") else None
     suffix = ".redownload" if existing else ""
     rel_folder = os.path.relpath(folder, download_dir).replace("%", "%%")
-    outtmpl = rel_folder + os.sep + "%(upload_date>%Y-%m-%d)s - %(title).150B [%(id)s]" + suffix + ".%(ext)s"
+    platform = job.get("platform") or "youtube"
+    file_key = _file_key(job)
+    standard_youtube_id = platform == "youtube" and VIDEO_ID_RE.fullmatch(str(job["video_id"]))
+    id_field = "%(id)s" if standard_youtube_id else file_key
+    outtmpl = (rel_folder + os.sep + "%(upload_date>%Y-%m-%d)s - %(title).150B ["
+               + id_field + "]" + suffix + ".%(ext)s")
 
     state = {"stop": None, "skip": None, "file": None, "stage": "Downloading"}
 
@@ -264,7 +276,18 @@ def download_video(job: dict, settings: dict, progress=lambda fields: None,
     if tools:
         opts["ffmpeg_location"] = tools["dir"]
 
-    url = f"https://www.youtube.com/watch?v={job['video_id']}"
+    if standard_youtube_id:
+        url = f"https://www.youtube.com/watch?v={job['video_id']}"
+    elif platform == "youtube" and job.get("url"):
+        url, adapter = normalize_media_url(job["url"])
+        if adapter.key != platform:
+            raise IntegrityError("The queued URL no longer matches its recorded platform.")
+    elif job.get("url"):
+        url, adapter = normalize_media_url(job["url"])
+        if adapter.key != platform:
+            raise IntegrityError("The queued URL no longer matches its recorded platform.")
+    else:
+        raise IntegrityError("The queued media URL is missing.")
     try:
         with ydl_factory(opts) as ydl:
             info = ydl.extract_info(url, download=True)

@@ -1,9 +1,9 @@
-# Local YouTube Bulk Downloader
+# Local Media Downloader
 
-A free, locally hosted web app (Flask + yt-dlp + SQLite) for listing a YouTube
-channel's videos and Shorts, selecting them, downloading in bulk, and uploading
-to Google Drive manually or automatically. It runs on your PC and opens in Chrome at
-<http://127.0.0.1:5000>. Nothing is exposed to the internet.
+A locally hosted web app (Flask + yt-dlp + SQLite) for downloading public media
+from YouTube, Instagram, Facebook, TikTok, and X (Twitter), with YouTube channel
+discovery, a shared queue, and optional Google Drive uploads. It runs on your PC
+at <http://127.0.0.1:5000> and binds only to localhost.
 
 For requirements, installation, and step-by-step instructions, see the
 [User Guide](USER_GUIDE.md).
@@ -17,6 +17,7 @@ For requirements, installation, and step-by-step instructions, see the
 | 4 | Google Drive OAuth, folder choice, manual + resumable uploads | **Done** (needs your Google Cloud setup) |
 | 5 | Automatic upload queue | **Done** |
 | 6 | Full documentation and troubleshooting | **Done** |
+| 7 | Public single-link and supported collection downloads across social platforms | **Done** |
 
 ## Setup (Windows)
 
@@ -50,7 +51,8 @@ Keep yt-dlp current; YouTube changes often:
 Override with environment variables `YTDL_DATA_DIR`, `YTDL_DOWNLOADS_DIR`, `YTDL_PORT`.
 `data\` and `downloads\` are git-ignored.
 
-The `.env` file is optional. It can hold `YTDL_DATA_DIR`, `YTDL_DOWNLOADS_DIR`,
+Copy `.env.example` to `.env` if you need local environment settings. The `.env`
+file is optional. It can hold `YTDL_DATA_DIR`, `YTDL_DOWNLOADS_DIR`,
 `YTDL_PORT`, and Google configuration values. Environment variables already set
 in Windows take precedence over values in `.env`. Do not share or publish `.env`:
 it may contain Google client secrets.
@@ -61,13 +63,13 @@ it may contain Google client secrets.
 2. On **Download Queue**, press **Start queue**. The queue starts paused, and it
    also comes back paused after an app restart, so nothing downloads unexpectedly.
 3. Files are saved as
-   `<download folder>\<Channel>\[Shorts\|Live\]<YYYY-MM-DD> - <title> [<video id>].<ext>`.
+   `<download folder>\<Channel>\[Shorts\|Live\]<YYYY-MM-DD> - <title> [<media id>].<ext>`.
 
 How the queue behaves:
 
 - **One download at a time** by default, with a random 5–15 s pause between
   downloads (Settings).
-- **No duplicates.** A video id can only be in the queue once. Videos already
+- **No duplicates.** A media ID can only be in the queue once. Items already
   downloaded, or already on disk with their `[id]` in the file name, are skipped
   and existing files are never overwritten. *Re-download* (Local Files) keeps the
   old file until the new one has fully finished.
@@ -82,6 +84,30 @@ How the queue behaves:
   passes `ffprobe`. After a crash, unfinished items go back to *pending*.
 - **Exact metadata.** Upload date and duration are corrected from the full
   video page when each download finishes.
+
+## Downloading from social media links
+
+On **Download Queue**, paste one or more public media URLs into **Download from a
+link** (one URL per line) and select **Inspect and add to queue**. The app
+identifies the platform, uses yt-dlp's matching extractor, and adds each
+available media item to the same queue. Up to 20 URLs can be submitted at once.
+When an extractor exposes a playlist or collection, its first 100 items are
+expanded into individual queue entries; larger collections are explicitly
+reported as limited.
+
+Supported URL hosts cover YouTube (`youtube.com`, `youtu.be`), Instagram,
+Facebook (`facebook.com`, `fb.watch`), TikTok, and X/Twitter (`x.com`,
+`twitter.com`). Quality and container settings are used where the platform
+provides compatible formats. Completed files use the configured local folder
+and can be uploaded through the existing Google Drive queue.
+
+Platform extractors change frequently. Keep yt-dlp updated and note that not
+every post, media type, playlist, or collection is supported by every platform.
+The app does not use account cookies or bypass sign-in, private-content,
+regional, DRM, or other access restrictions. Login-required, private,
+unavailable, rate-limited, and unsupported links show an actionable error.
+Download only media you own or have permission to save, and follow the
+platform's terms and applicable copyright rules.
 
 ## Google Drive (manual and automatic uploads)
 
@@ -128,8 +154,8 @@ How the queue behaves:
 - **Reliability.** Uploads are resumable and sent in 8 MB chunks. A failed chunk
   is re-sent, and temporary errors are retried with backoff. If Drive is full or
   the sign-in is rejected, uploads pause until you fix it and press Resume.
-- **No duplicates.** Each uploaded file is tagged with its YouTube video ID, so
-  the same video is never uploaded twice to the same folder.
+- **No duplicates.** Each uploaded file is tagged with its internal media ID,
+  so the same queued item is not uploaded twice to the same folder.
 - **Independent of downloads.** Uploads never change a download. A failed upload
   can be retried without downloading again.
 - **Setup requirement.** Automatic uploads can only be enabled after connecting
@@ -141,10 +167,10 @@ How the queue behaves:
 
 - Discovery runs one job at a time in a background thread; requests are spaced
   by the *Delay between requests* setting (default 1 s).
-- HTTP 429, "try again later", or "Sign in to confirm you're not a bot" **pauses
-  all YouTube activity** (saved in the database, so it survives restarts). A
+- HTTP 429, "try again later", or an account/bot check **pauses automated
+  platform requests** (saved in the database, so it survives restarts). A
   banner shows the reason and a suggested wait; you resume manually.
-- The same pause applies to downloads. The video that hit the limit returns to
+- The same pause applies to downloads. The item that hit the limit returns to
   *pending* without using up one of its retries. Three HTTP 403 errors in a row
   also pause the queue.
 - No proxies, IP rotation or paid services are used.
@@ -160,6 +186,10 @@ How the queue behaves:
 
 - YouTube's Shorts tab does not provide duration or upload date in fast listing
   mode, so Shorts show no duration/date and are excluded by duration/date filters.
+- Social-media availability depends on the installed yt-dlp extractor. The app
+  does not sign in, use cookies, download DRM-protected media, or bypass access
+  controls. Playlists/collections are expanded only when the extractor supports
+  them and are capped at 100 items per submitted URL.
 - Upload dates for regular videos come from "3 weeks ago"-style text and are
   approximate (shown with `~`). Exact dates are filled in when a video is downloaded.
 - Changing *Concurrent downloads* takes effect for the next download; 1 is
@@ -178,13 +208,13 @@ How the queue behaves:
 - **yt-dlp reports a JavaScript challenge/runtime error.** Install Node.js, or
   install another supported runtime and select it in Settings. Update yt-dlp
   with `.venv\Scripts\python -m pip install -U "yt-dlp[default]"`.
-- **YouTube requests are paused.** Read the pause banner and wait for the
-  suggested cooldown before pressing **Resume**. A 429 or bot check pauses both
-  discovery and downloads. Do not use proxies or request rotation.
-- **A video fails immediately.** Private, deleted, members-only, age-restricted,
-  geo-blocked, upcoming, or otherwise unavailable videos may not be downloadable
-  with the current account and settings. The queue's error message gives the
-  category; retrying does not remove the restriction.
+- **Platform requests are paused.** Read the pause banner and wait for the
+  suggested cooldown before pressing **Resume**. A 429 or verification check
+  pauses automated requests. Do not use proxies or request rotation.
+- **A media item fails immediately.** Private, deleted, login-required,
+  age-restricted, geo-blocked, DRM-protected, or otherwise unavailable media
+  cannot be downloaded through this public-content workflow. The queue's error
+  message gives the category; retrying does not remove the restriction.
 - **A download is stuck or was interrupted.** Pause and resume to keep and reuse
   its `.part` file. Cancel deletes partial files. After an app restart, active
   downloads return to pending, but the queue starts paused; press **Start queue**

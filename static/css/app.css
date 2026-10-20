@@ -77,7 +77,12 @@ input[type=text], input[type=search], input[type=number], input[type=date], sele
   background: var(--panel); color: var(--text); border: 1px solid var(--border);
   border-radius: 6px; padding: 7px 9px; font: inherit;
 }
+textarea {
+  background: var(--panel); color: var(--text); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px 10px; font: inherit;
+}
 input:focus, select:focus { outline: 2px solid rgba(196, 48, 43, .35); border-color: var(--accent); }
+textarea:focus { outline: 2px solid rgba(196, 48, 43, .35); border-color: var(--accent); }
 .row { display: flex; gap: 10px; align-items: center; }
 label.inline { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
 .num { width: 64px; }
@@ -91,6 +96,11 @@ label.inline { display: inline-flex; align-items: center; gap: 5px; white-space:
 .btn-primary:hover:not(:disabled) { background: var(--accent-dark); border-color: var(--accent-dark); }
 .btn-small { padding: 4px 10px; font-size: 12px; }
 .btn-danger { color: var(--bad); }
+.media-url-entry form { display: grid; gap: 8px; }
+.media-url-entry textarea { width: 100%; resize: vertical; }
+.media-url-entry .row { flex-wrap: wrap; }
+.media-url-entry #media-url-result { margin-top: 10px; }
+.media-url-entry #media-url-result ul { margin: 4px 0 0; padding-left: 20px; }
 
 .settings label { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
 .settings label.check { flex-direction: row; align-items: center; gap: 8px; }

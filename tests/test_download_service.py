@@ -118,6 +118,16 @@ def test_download_error_propagates(tmp_path):
         ds.download_video(JOB, _settings(tmp_path), ydl_factory=fake)
 
 
+def test_supported_social_platform_uses_source_url_and_safe_queue_key(tmp_path):
+    job = {**JOB, "video_id": "instagram_0123456789abcdef01234567", "external_id": "reel-42",
+           "platform": "instagram", "url": "https://www.instagram.com/reel/reel-42/"}
+    fake = FakeYDL()
+    result = ds.download_video(job, _settings(tmp_path), ydl_factory=fake)
+    assert fake.url == job["url"]
+    assert f"[{job['video_id']}]" in Path(result["file_path"]).name
+    assert Path(result["file_path"]).parent.name == "My_ Channel_"
+
+
 def test_missing_ffmpeg_gives_clear_non_retryable_error(tmp_path):
     from services.errors import classify_error
     fake = FakeYDL(error=yt_dlp.utils.DownloadError(

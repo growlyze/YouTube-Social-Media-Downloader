@@ -46,6 +46,7 @@ function row(item) {
     el("td", { class: "col-check" }, box),
     el("td", { class: "ellipsis" },
       el("a", { href: item.url, target: "_blank", rel: "noopener noreferrer", title: item.title }, item.title || item.video_id),
+      el("div", { class: "muted small" }, `${platformLabel(item.platform)} · ${item.channel_name || ""}`),
       el("div", { class: "muted small ellipsis path", title: item.file_path || "" },
         item.file_exists ? fileName : el("span", { class: "text-bad" }, "Missing on disk")),
       item.error_message ? el("div", { class: "muted small wrap" }, item.error_message) : null),

@@ -132,7 +132,8 @@ def upsert_videos(source_id, videos, start_position=0):
             v["video_id"], v.get("title"), v.get("channel_id"), v.get("channel_name"),
             v.get("duration"), v.get("upload_date"), int(bool(v.get("date_is_approx"))),
             v.get("video_type") or "video", v.get("availability"), v.get("live_status"),
-            v.get("thumbnail"), v["url"], v.get("view_count"), now,
+            v.get("thumbnail"), v["url"], v.get("view_count"), v.get("platform", "youtube"),
+            v.get("external_id"), now,
         )
         for v in videos
     ]
@@ -141,8 +142,8 @@ def upsert_videos(source_id, videos, start_position=0):
             """
             INSERT INTO videos(video_id, title, channel_id, channel_name, duration,
                 upload_date, date_is_approx, video_type, availability, live_status,
-                thumbnail, url, view_count, updated_at)
-            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                thumbnail, url, view_count, platform, external_id, updated_at)
+            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(video_id) DO UPDATE SET
                 title        = COALESCE(excluded.title, videos.title),
                 channel_id   = COALESCE(excluded.channel_id, videos.channel_id),
@@ -165,17 +166,21 @@ def upsert_videos(source_id, videos, start_position=0):
                 availability = COALESCE(excluded.availability, videos.availability),
                 live_status  = COALESCE(excluded.live_status, videos.live_status),
                 thumbnail    = COALESCE(excluded.thumbnail, videos.thumbnail),
+                url          = excluded.url,
+                platform     = excluded.platform,
+                external_id  = COALESCE(excluded.external_id, videos.external_id),
                 view_count   = COALESCE(excluded.view_count, videos.view_count),
                 updated_at   = excluded.updated_at
             """,
             rows,
         )
-        conn.executemany(
-            "INSERT INTO source_videos(source_id, video_id, position) VALUES(?, ?, ?) "
-            "ON CONFLICT(source_id, video_id) DO UPDATE SET "
-            "position = COALESCE(source_videos.position, excluded.position)",
-            [(source_id, v["video_id"], start_position + i) for i, v in enumerate(videos)],
-        )
+        if source_id is not None:
+            conn.executemany(
+                "INSERT INTO source_videos(source_id, video_id, position) VALUES(?, ?, ?) "
+                "ON CONFLICT(source_id, video_id) DO UPDATE SET "
+                "position = COALESCE(source_videos.position, excluded.position)",
+                [(source_id, v["video_id"], start_position + i) for i, v in enumerate(videos)],
+            )
 
 
 UNAVAILABLE = ("private", "deleted", "unavailable", "premium_only", "subscriber_only", "needs_auth")
@@ -536,7 +541,8 @@ def update_download(download_id, **fields):
 
 _DOWNLOAD_SELECT = """
     SELECT d.*, v.title, v.channel_name, v.channel_id, v.thumbnail, v.video_type, v.duration,
-           v.url, v.upload_date, v.date_is_approx, v.live_status, v.availability
+           v.url, v.upload_date, v.date_is_approx, v.live_status, v.availability,
+           v.platform, v.external_id
     FROM downloads d JOIN videos v ON v.video_id = d.video_id
 """
 
@@ -694,7 +700,7 @@ def enqueue_uploads(download_ids, folder_id, folder_name=None):
 
 _UPLOAD_SELECT = """
     SELECT u.*, d.file_path, d.file_size, d.status AS download_status,
-           v.title, v.channel_name, v.thumbnail, v.url, v.video_type
+           v.title, v.channel_name, v.thumbnail, v.url, v.video_type, v.platform
     FROM uploads u
     JOIN downloads d ON d.id = u.download_id
     JOIN videos v ON v.video_id = u.video_id

@@ -1,8 +1,9 @@
-# Local YouTube Bulk Downloader — User Guide
+# Local Media Downloader — User Guide
 
 This guide covers the requirements, installation, and everyday use of the
 locally hosted downloader. The app runs on your Windows PC and is opened in a
-browser at <http://127.0.0.1:5000>.
+browser at <http://127.0.0.1:5000>. It supports YouTube, Instagram, Facebook,
+TikTok, and X/Twitter public media links.
 
 ## Requirements
 
@@ -20,7 +21,7 @@ browser at <http://127.0.0.1:5000>.
 
   The app checks WinGet's install directory automatically. If FFmpeg is missing,
   many videos fail with an explanatory message; install FFmpeg and retry them.
-- **Internet access** is needed to discover and download YouTube videos, and to
+- **Internet access** is needed to discover or download supported media and to
   connect to Google Drive if you use uploads.
 - **Google Cloud setup is optional.** It is only needed for Drive uploads.
 - Allow enough free disk space for the videos you plan to download. The app does
@@ -66,6 +67,30 @@ channel, with Shorts and Live videos in their own subfolders. You can change the
 destination in **Settings**. Videos already queued keep the destination they
 were assigned when queued.
 
+## Download from a social media link
+
+1. Open **Download Queue**.
+2. In **Download from a link**, paste one public URL per line and select
+   **Inspect and add to queue**. You can submit up to 20 URLs at once.
+3. The app identifies the platform and inspects each link with yt-dlp. Supported
+   items appear in the regular queue with progress, retry, local-file, and
+   optional Google Drive upload handling.
+
+Supported domains are YouTube (`youtube.com`, `youtu.be`), Instagram, Facebook
+(`facebook.com`, `fb.watch`), TikTok, and X/Twitter (`x.com`, `twitter.com`). If
+yt-dlp identifies a playlist or collection, the app expands up to the first
+100 entries per URL. Larger collections are limited and the page reports that
+limit. Quality and container preferences apply when compatible formats are
+available.
+
+Support depends on the current yt-dlp extractor and media type; a platform may
+not expose every post, collection, or format. This workflow does not sign in,
+use account cookies, bypass private/login-required content, evade regional
+restrictions, or download DRM-protected media. If a link is unavailable or
+requires authentication, the app reports that instead of trying to bypass the
+restriction. Respect platform terms and download only media you own or have
+permission to save.
+
 ### Queue controls
 
 - **Pause queue** pauses an active download and preserves its partial file so it
@@ -73,8 +98,8 @@ were assigned when queued.
 - Temporary network errors are retried with backoff. Some errors—such as
   private, deleted, members-only, age-restricted, geo-blocked, or upcoming
   videos—may not be fixable by retrying.
-- A YouTube rate-limit or bot-check pauses YouTube activity. Follow the pause
-  banner's suggested wait, then press **Resume**.
+- A platform rate-limit or verification check pauses automated requests. Follow
+  the pause banner's suggested wait, then press **Resume**.
 - Re-download is available from **Local Files**. The existing file is retained
   until its replacement finishes successfully.
 
@@ -161,8 +186,8 @@ full, resolve the issue and resume or retry the upload.
 | The page will not open | Confirm `app.py` is still running in PowerShell and open `http://127.0.0.1:5000`. If the port is in use, set `YTDL_PORT` and restart the app. |
 | Many videos fail because FFmpeg is required | Install FFmpeg with `winget install Gyan.FFmpeg`, then retry failed items. |
 | JavaScript challenge or runtime error | Install Node.js or another supported runtime, select it in Settings, and update yt-dlp. |
-| YouTube requests are paused | Wait for the cooldown shown in the banner, then press **Resume**. Discovery and downloads share this pause. |
-| A video is unavailable or restricted | Check the failure message. Private, deleted, members-only, age-restricted, geo-blocked, and upcoming content may not be accessible. |
+| Platform requests are paused | Wait for the cooldown shown in the banner, then press **Resume**. Discovery and downloads share this pause. |
+| A media item is unavailable or restricted | Check the failure message. Private, login-required, members-only, age-restricted, geo-blocked, DRM-protected, and upcoming content may not be accessible. |
 | A download stopped or the app restarted | Start the download queue. Interrupted downloads return to pending and can reuse their partial files. |
 | A Drive upload failed | Check **Upload Queue**, reconnect Google Drive if required, confirm folder access or available storage, then resume or retry. |
 | A download folder cannot be selected | Confirm the drive exists and your Windows account can create files there. Settings checks write access when saving the folder. |

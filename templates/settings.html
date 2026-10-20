@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Settings · YT Bulk Downloader{% endblock %}
+{% block title %}Settings · Media Downloader{% endblock %}
 {% block content %}
 <h1>Settings</h1>
 <form id="settings-form" class="settings" autocomplete="off">
@@ -35,7 +35,7 @@
 
   <section class="card">
     <h2>Request pacing &amp; rate limits</h2>
-    <p class="muted small">Slower is safer. When YouTube returns HTTP 429 or asks for bot verification, all YouTube activity pauses until you press Resume.</p>
+    <p class="muted small">Slower is safer. When a platform returns HTTP 429 or asks for verification, automated requests pause until you press Resume.</p>
     <div class="grid2">
       <label>Delay between requests (seconds)
         <input type="number" name="sleep_requests" min="0" max="60" step="0.5" value="{{ settings.sleep_requests }}">

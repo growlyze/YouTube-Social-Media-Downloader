@@ -41,7 +41,8 @@ function downloadRow(item) {
       el("div", { class: "dl-title" },
         el("a", { href: item.url, target: "_blank", rel: "noopener noreferrer" }, item.title || item.video_id)),
       el("div", { class: "muted small" },
-        [item.channel_name, item.video_type === "short" ? "Short" : item.video_type === "live" ? "Live" : null,
+        [platformLabel(item.platform), item.channel_name,
+         item.video_type === "short" ? "Short" : item.video_type === "live" ? "Live" : null,
          item.duration ? formatDuration(item.duration) : null].filter(Boolean).join(" · ")),
       isActive ? el("div", { class: "progress" }, bar) : null,
       el("div", { class: "small" },
@@ -71,7 +72,7 @@ function renderStatus(status) {
   $("ffmpeg-warning").hidden = runtime.ffmpeg;
   const pill = $("queue-pill");
   let label = queue.running ? "Running" : "Paused";
-  if (pause.paused) label = "Stopped: YouTube rate limit";
+  if (pause.paused) label = "Stopped: platform rate limit";
   pill.textContent = label;
   pill.className = "pill " + (pause.paused ? "pill-failed" : queue.running ? "pill-completed" : "pill-pending");
   const bits = [`${counts.downloading} downloading`, `${counts.pending} pending`,
@@ -135,6 +136,47 @@ $("clear-pending").addEventListener("click", async () => {
     toast(`Removed ${removed} pending item(s).`);
     refresh();
   } catch (err) { toast(err.message, "error"); }
+});
+
+function renderMediaResult(result) {
+  const node = $("media-url-result");
+  const lines = [];
+  if (result.added) lines.push(el("p", {}, `Queued ${result.added} media item(s).`));
+  if (result.already_queued) lines.push(el("p", {}, `${result.already_queued} item(s) were already queued.`));
+  if (result.already_downloaded) lines.push(el("p", {}, `${result.already_downloaded} item(s) were already downloaded.`));
+  for (const warning of result.warnings || []) lines.push(el("p", {}, warning));
+  if ((result.errors || []).length) {
+    lines.push(el("ul", {}, result.errors.map((entry) =>
+      el("li", {}, `${entry.platform}: ${entry.message}`))));
+  }
+  if (!lines.length) lines.push(el("p", {}, "No new media items were added."));
+  node.classList.toggle("text-bad", !(result.added || result.already_queued || result.already_downloaded));
+  node.replaceChildren(...lines);
+  node.hidden = false;
+}
+
+$("media-url-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const urls = $("media-urls").value.split(/\r?\n/).map((value) => value.trim()).filter(Boolean);
+  if (!urls.length) {
+    renderMediaResult({ errors: [{ platform: "URL", message: "Enter at least one media URL." }] });
+    return;
+  }
+  if (urls.length > 20) {
+    renderMediaResult({ errors: [{ platform: "URL", message: "Submit no more than 20 URLs at a time." }] });
+    return;
+  }
+  const button = $("media-url-submit");
+  button.disabled = true;
+  try {
+    const result = await api("/api/downloads/enqueue-url", { method: "POST", body: { urls } });
+    renderMediaResult(result);
+    if (result.added) refresh();
+  } catch (err) {
+    renderMediaResult({ errors: [{ platform: "URL", message: err.message }] });
+  } finally {
+    button.disabled = false;
+  }
 });
 
 refresh();
