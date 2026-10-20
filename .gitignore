@@ -1,0 +1,26 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+# Local runtime state and private user data
+data/
+downloads/
+instance/
+logs/
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# OAuth credentials, API keys, certificates, and tokens
+*secret*.json
+*credential*.json
+*token*.json
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Local environment files; keep the safe template versioned
+.env*
+!.env.example

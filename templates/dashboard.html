@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · YT Bulk Downloader{% endblock %}
+{% block content %}
+<h1>Dashboard</h1>
+
+<section class="cards">
+  <div class="card stat"><div class="stat-value">{{ stats.total }}</div><div class="stat-label">Videos discovered</div></div>
+  <div class="card stat"><div class="stat-value">{{ stats.shorts }}</div><div class="stat-label">Shorts</div></div>
+  <div class="card stat"><div class="stat-value">{{ stats.selected }}</div><div class="stat-label">Selected</div></div>
+  <div class="card stat"><div class="stat-value">{{ sources|length }}</div><div class="stat-label">Channels &amp; playlists</div></div>
+</section>
+
+<section class="cards">
+  <div class="card">
+    <h2>Downloads <span class="pill {{ 'pill-completed' if queue_running else 'pill-pending' }}">{{ 'running' if queue_running else 'paused' }}</span></h2>
+    <dl class="kv">
+      <dt>Downloading</dt><dd id="dash-downloading">{{ downloads.downloading }}</dd>
+      <dt>Pending</dt><dd>{{ downloads.pending }}</dd>
+      <dt>Completed</dt><dd>{{ downloads.completed }} ({{ (downloads.completed_bytes / 1073741824) | round(2) }} GB)</dd>
+      <dt>Failed</dt><dd>{{ downloads.failed }}</dd>
+      <dt>Cancelled</dt><dd>{{ downloads.cancelled }}</dd>
+    </dl>
+    <p><a href="{{ url_for('pages.downloads_page') }}">Open the download queue →</a></p>
+  </div>
+  <div class="card">
+    <h2>Uploads</h2>
+    <dl class="kv">
+      <dt>Uploading</dt><dd>{{ uploads.uploading }}</dd>
+      <dt>Pending</dt><dd>{{ uploads.pending }}</dd>
+      <dt>Completed</dt><dd>{{ uploads.completed }}</dd>
+      <dt>Failed</dt><dd>{{ uploads.failed }}</dd>
+    </dl>
+    <p><a href="{{ url_for('pages.uploads_page') }}">Open the upload queue →</a></p>
+  </div>
+  <div class="card">
+    <h2>Configuration</h2>
+    <dl class="kv">
+      <dt>Download folder</dt><dd class="path">{{ settings.download_dir }}</dd>
+      <dt>Data folder</dt><dd class="path">{{ data_dir }}</dd>
+      <dt>Quality</dt><dd>{{ settings.video_quality }} · {{ settings.video_container }}</dd>
+      <dt>Google Drive</dt><dd>{{ 'Connected' if drive_connected else 'Not connected' }}{% if settings.drive_folder_name %} · folder “{{ settings.drive_folder_name }}”{% endif %}</dd>
+      <dt>Automatic upload</dt><dd>{{ 'Enabled' if settings.auto_upload else 'Disabled' }}</dd>
+      <dt>YouTube requests</dt><dd>{{ 'Paused — ' ~ pause.kind if pause.paused else 'Active' }}</dd>
+      <dt>FFmpeg</dt><dd>{% if runtime.ffmpeg %}Found{% else %}<span class="text-bad">Missing</span>; required for most downloads: <code>winget install Gyan.FFmpeg</code>{% endif %}</dd>
+      <dt>JS runtime</dt><dd>{{ runtime.js_runtime or 'none found' }}</dd>
+    </dl>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Recent discovery jobs</h2>
+  {% if jobs %}
+  <table class="table">
+    <thead><tr><th>#</th><th>Input</th><th>Status</th><th>Found</th><th>Message</th></tr></thead>
+    <tbody>
+    {% for job in jobs %}
+      <tr>
+        <td>{{ job.id }}</td>
+        <td class="ellipsis">{{ job.input_url }}</td>
+        <td><span class="pill pill-{{ job.status }}">{{ job.status }}</span></td>
+        <td>{{ job.found_count }}</td>
+        <td class="ellipsis" title="{{ job.message or '' }}">{{ job.message or '' }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No channels fetched yet. Go to the <a href="{{ url_for('pages.library') }}">Channel Library</a> to add one.</p>
+  {% endif %}
+</section>
+{% endblock %}

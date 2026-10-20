@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Download Queue · YT Bulk Downloader{% endblock %}
+{% block content %}
+<h1>Download Queue</h1>
+
+<div id="ffmpeg-warning" class="banner banner-info" hidden>
+  <div><strong>FFmpeg is not installed, so most YouTube videos cannot be downloaded.</strong>
+    YouTube now serves video and audio as separate streams that FFmpeg must merge.
+    Run <code>winget install Gyan.FFmpeg</code> in PowerShell; the app detects it automatically, then press “Retry all failed”.</div>
+</div>
+
+<section class="card queue-bar">
+  <div class="queue-state">
+    <span id="queue-pill" class="pill">…</span>
+    <span id="queue-summary" class="muted"></span>
+  </div>
+  <div class="row">
+    <button type="button" class="btn btn-primary" id="queue-start">Start queue</button>
+    <button type="button" class="btn" id="queue-pause">Pause queue</button>
+    <button type="button" class="btn" id="retry-failed">Retry all failed</button>
+  </div>
+  <p id="queue-note" class="muted small" hidden></p>
+  {% include "_destination.html" %}
+</section>
+
+<section class="card">
+  <h2>Queue <span id="queue-count" class="muted"></span></h2>
+  <div id="queue-list" class="dl-list"></div>
+  <p id="queue-empty" class="muted" hidden>The queue is empty. Select videos in the
+    <a href="{{ url_for('pages.library') }}">Channel Library</a> and press “Download selected”.</p>
+  <div class="row">
+    <button type="button" class="btn btn-small btn-danger" id="clear-pending">Remove all pending</button>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Failed &amp; cancelled <span id="failed-count" class="muted"></span></h2>
+  <div id="failed-list" class="dl-list"></div>
+  <p id="failed-empty" class="muted" hidden>Nothing has failed.</p>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/downloads.js') }}"></script>{% endblock %}

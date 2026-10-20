@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Channel Library · YT Bulk Downloader{% endblock %}
+{% block content %}
+<h1>Channel Library</h1>
+
+<section class="card">
+  <form id="discover-form" class="row" autocomplete="off">
+    <input type="text" id="discover-url" class="grow" maxlength="500" required
+           placeholder="Channel URL, @handle, or playlist URL — e.g. @veritasium or https://www.youtube.com/playlist?list=…">
+    <button type="submit" class="btn btn-primary">Fetch videos</button>
+  </form>
+  <p class="muted small">
+    Lists {{ 'Videos + Shorts' if settings.include_shorts else 'Videos' }}{{ ' + Live' if settings.include_streams else '' }}
+    tabs for channels. Requests are paced at {{ settings.sleep_requests }}s; large channels take a while.
+    Change this in <a href="{{ url_for('pages.settings_page') }}">Settings</a>.
+  </p>
+  <div id="job-status" class="job-status" hidden>
+    <span class="spinner" id="job-spinner"></span>
+    <span id="job-message"></span>
+    <button type="button" class="btn btn-small" id="job-cancel" hidden>Cancel</button>
+  </div>
+</section>
+
+<div class="library">
+  <aside class="card sources">
+    <h2>Sources</h2>
+    <ul id="source-list" class="source-list">
+      <li><a href="#" data-source="" class="source-link">All videos</a></li>
+    </ul>
+  </aside>
+
+  <section class="card videos-panel">
+    <div class="filters">
+      <input type="search" id="f-q" placeholder="Search titles…" maxlength="200">
+      <select id="f-type" title="Type">
+        <option value="">All types</option>
+        <option value="video">Videos</option>
+        <option value="short">Shorts</option>
+        <option value="live">Live</option>
+      </select>
+      <label class="inline">From <input type="date" id="f-date-from"></label>
+      <label class="inline">To <input type="date" id="f-date-to"></label>
+      <label class="inline">Min <input type="number" id="f-min" min="0" class="num" placeholder="min"> m</label>
+      <label class="inline">Max <input type="number" id="f-max" min="0" class="num" placeholder="max"> m</label>
+      <select id="f-availability" title="Availability">
+        <option value="">Any availability</option>
+        <option value="available">Available</option>
+        <option value="unavailable">Private / deleted</option>
+      </select>
+      <select id="f-download" title="Download status">
+        <option value="">Any download status</option>
+        <option value="not_downloaded">Not downloaded</option>
+        <option value="downloaded">Downloaded</option>
+        <option value="queued">Queued / downloading</option>
+        <option value="failed">Failed / cancelled</option>
+      </select>
+      <label class="inline"><input type="checkbox" id="f-selected"> Selected only</label>
+      <select id="f-sort" title="Sort">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+        <option value="title">Title A–Z</option>
+        <option value="longest">Longest</option>
+        <option value="shortest">Shortest</option>
+        <option value="position">Channel order</option>
+      </select>
+      <button type="button" class="btn btn-small" id="f-reset">Reset</button>
+    </div>
+
+    <div class="bulkbar">
+      <label class="inline"><input type="checkbox" id="page-toggle"> This page</label>
+      <button type="button" class="btn btn-small" id="select-all">Select all matching</button>
+      <button type="button" class="btn btn-small" id="deselect-all">Deselect all matching</button>
+      <span class="grow"></span>
+      <span id="count-label" class="muted"></span>
+      <button type="button" class="btn btn-primary" id="queue-selected" disabled
+              title="Add the selected videos (matching the current filters) to the download queue">Download selected</button>
+    </div>
+
+    {% include "_destination.html" %}
+
+    <div id="video-grid" class="video-grid" aria-live="polite"></div>
+    <p id="empty-state" class="muted center" hidden>No videos match. Fetch a channel above or loosen the filters.</p>
+
+    <div class="pager">
+      <button type="button" class="btn btn-small" id="prev-page">‹ Prev</button>
+      <span id="page-label"></span>
+      <button type="button" class="btn btn-small" id="next-page">Next ›</button>
+      <select id="page-size" title="Per page">
+        <option>24</option><option selected>48</option><option>96</option><option>200</option>
+      </select>
+    </div>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/library.js') }}"></script>{% endblock %}

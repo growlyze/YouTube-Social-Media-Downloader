@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Local Files · YT Bulk Downloader{% endblock %}
+{% block content %}
+<h1>Local Files</h1>
+<section class="card">
+  {% include "_destination.html" %}
+</section>
+<section class="card">
+  <div class="filters">
+    <input type="search" id="local-q" placeholder="Search titles…" maxlength="200">
+    <span class="grow"></span>
+    <span id="local-count" class="muted"></span>
+    <button type="button" class="btn btn-primary" id="upload-selected" disabled>Upload selected to Drive</button>
+  </div>
+  <table class="table files-table">
+    <thead><tr><th class="col-check"><input type="checkbox" id="local-all" aria-label="Select all on this page"></th>
+      <th>Video</th><th>Format</th><th>Size</th><th>Downloaded</th><th>Google Drive</th><th></th></tr></thead>
+    <tbody id="local-rows"></tbody>
+  </table>
+  <p id="local-empty" class="muted" hidden>No downloaded videos yet.</p>
+  <div class="pager">
+    <button type="button" class="btn btn-small" id="local-prev">‹ Prev</button>
+    <span id="local-page"></span>
+    <button type="button" class="btn btn-small" id="local-next">Next ›</button>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/local_files.js') }}"></script>{% endblock %}

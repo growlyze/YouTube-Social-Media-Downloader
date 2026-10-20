@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Download History · YT Bulk Downloader{% endblock %}
+{% block content %}
+<h1>Download History</h1>
+<section class="card">
+  <div class="filters">
+    <select id="hist-view">
+      <option value="history">All finished</option>
+      <option value="completed">Completed</option>
+      <option value="failed">Failed &amp; cancelled</option>
+    </select>
+    <input type="search" id="hist-q" placeholder="Search titles…" maxlength="200">
+    <span class="grow"></span>
+    <span id="hist-count" class="muted"></span>
+    <button type="button" class="btn btn-small btn-danger" id="hist-clear"
+            title="Removes history records only; files on disk are kept">Clear failed/cancelled records</button>
+  </div>
+  <table class="table history-table">
+    <thead><tr><th>Video</th><th>Status</th><th>Finished (UTC)</th><th>Details</th><th></th></tr></thead>
+    <tbody id="hist-rows"></tbody>
+  </table>
+  <p id="hist-empty" class="muted" hidden>No history yet.</p>
+  <div class="pager">
+    <button type="button" class="btn btn-small" id="hist-prev">‹ Prev</button>
+    <span id="hist-page"></span>
+    <button type="button" class="btn btn-small" id="hist-next">Next ›</button>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/history.js') }}"></script>{% endblock %}

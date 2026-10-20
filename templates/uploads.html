@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Upload Queue · YT Bulk Downloader{% endblock %}
+{% block content %}
+<h1>Upload Queue</h1>
+
+<div id="upload-pause" class="banner banner-warn" hidden>
+  <div><strong>Uploads are paused.</strong> <span id="upload-pause-msg"></span></div>
+</div>
+
+<section class="card queue-bar">
+  <div class="queue-state">
+    <span id="up-pill" class="pill">…</span>
+    <span id="up-summary" class="muted"></span>
+  </div>
+  <div class="row">
+    <button type="button" class="btn btn-primary" id="up-start">Resume uploads</button>
+    <button type="button" class="btn" id="up-pause">Pause uploads</button>
+    <button type="button" class="btn" id="up-retry">Retry all failed</button>
+  </div>
+  <div class="destination">
+    <span class="muted">Drive folder:</span>
+    <span class="destination-path">{{ settings.drive_folder_name or 'not chosen' }}</span>
+    <a class="btn btn-small" href="{{ url_for('pages.settings_page') }}#drive">Change in Settings</a>
+  </div>
+  <p class="muted small">Add files from <a href="{{ url_for('pages.local_page') }}">Local Files</a> with “Upload selected to Drive”.
+    Uploads never change your downloads; a failed upload can be retried without downloading again.</p>
+</section>
+
+<section class="card">
+  <h2>Uploading &amp; waiting <span id="up-count" class="muted"></span></h2>
+  <div id="up-list" class="dl-list"></div>
+  <p id="up-empty" class="muted" hidden>Nothing waiting to upload.</p>
+</section>
+
+<section class="card">
+  <h2>Failed &amp; cancelled</h2>
+  <div id="up-failed" class="dl-list"></div>
+  <p id="up-failed-empty" class="muted" hidden>No failed uploads.</p>
+</section>
+
+<section class="card">
+  <h2>Recently uploaded</h2>
+  <div id="up-done" class="dl-list"></div>
+  <p id="up-done-empty" class="muted" hidden>No uploads yet.</p>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/uploads.js') }}"></script>{% endblock %}

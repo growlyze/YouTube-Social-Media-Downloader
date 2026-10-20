@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Settings · YT Bulk Downloader{% endblock %}
+{% block content %}
+<h1>Settings</h1>
+<form id="settings-form" class="settings" autocomplete="off">
+  <section class="card">
+    <h2>Storage</h2>
+    <label>Download folder
+      <span class="row">
+        <input type="text" name="download_dir" class="js-download-dir grow" value="{{ settings.download_dir }}" required>
+        <button type="button" class="btn js-open-folder" title="Open this folder in Windows Explorer">Open Folder</button>
+        <button type="button" class="btn btn-primary js-choose-folder" title="Choose a different download folder">Browse…</button>
+      </span>
+      <small class="muted">Videos are saved in a sub-folder per channel. The folder is created if missing
+        and checked for write access. Already-queued videos keep the folder they were queued with.</small>
+    </label>
+    <p class="muted small">App data (database, logs, credentials): <span class="path">{{ data_dir }}</span></p>
+  </section>
+
+  <section class="card">
+    <h2>Quality</h2>
+    <div class="grid2">
+      <label>Maximum video quality
+        <select name="video_quality">
+          {% for q in qualities %}<option value="{{ q }}" {{ 'selected' if q == settings.video_quality }}>{{ q }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Container
+        <select name="video_container">
+          {% for c in containers %}<option value="{{ c }}" {{ 'selected' if c == settings.video_container }}>{{ c }}</option>{% endfor %}
+        </select>
+      </label>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Request pacing &amp; rate limits</h2>
+    <p class="muted small">Slower is safer. When YouTube returns HTTP 429 or asks for bot verification, all YouTube activity pauses until you press Resume.</p>
+    <div class="grid2">
+      <label>Delay between requests (seconds)
+        <input type="number" name="sleep_requests" min="0" max="60" step="0.5" value="{{ settings.sleep_requests }}">
+      </label>
+      <label>Max retries per item
+        <input type="number" name="max_retries" min="0" max="10" value="{{ settings.max_retries }}">
+      </label>
+      <label>Min delay before each download (seconds)
+        <input type="number" name="sleep_interval_min" min="0" max="600" step="1" value="{{ settings.sleep_interval_min }}">
+      </label>
+      <label>Max delay before each download (seconds)
+        <input type="number" name="sleep_interval_max" min="0" max="1800" step="1" value="{{ settings.sleep_interval_max }}">
+      </label>
+      <label>Concurrent downloads
+        <input type="number" name="max_concurrent_downloads" min="1" max="3" value="{{ settings.max_concurrent_downloads }}">
+        <small class="muted">1 (sequential) is strongly recommended.</small>
+      </label>
+      <label>Suggested wait after a rate limit (minutes)
+        <input type="number" name="rate_limit_cooldown_minutes" min="5" max="1440" value="{{ settings.rate_limit_cooldown_minutes }}">
+      </label>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Discovery</h2>
+    <div class="grid2">
+      <label class="check"><input type="checkbox" name="include_shorts" {{ 'checked' if settings.include_shorts }}> Include Shorts tab</label>
+      <label class="check"><input type="checkbox" name="include_streams" {{ 'checked' if settings.include_streams }}> Include Live/streams tab</label>
+      <label>Max items per tab (0 = all)
+        <input type="number" name="discovery_limit" min="0" max="100000" value="{{ settings.discovery_limit }}">
+      </label>
+      <label>JavaScript runtime for yt-dlp
+        <select name="js_runtime">
+          {% for r in runtimes %}<option value="{{ r }}" {{ 'selected' if r == settings.js_runtime }}>{{ r }}</option>{% endfor %}
+        </select>
+        <small class="muted">Must be installed. Node.js is detected on this PC.</small>
+      </label>
+    </div>
+  </section>
+
+  <section class="card" id="drive">
+    <h2>Google Drive</h2>
+    <ol class="setup-steps" id="drive-steps">
+      <li id="step-client"><strong>OAuth client file</strong> — <span class="muted" id="drive-client-state">checking…</span></li>
+      <li id="step-picker"><strong>Picker API key &amp; project number</strong> —
+        <span class="muted" id="drive-picker-state">checking…</span>
+        <div class="muted small">Stored in <code>.env</code> (<code>GOOGLE_API_KEY</code>, <code>GOOGLE_PROJECT_NUMBER</code>), not in the app's database.</div>
+      </li>
+      <li id="step-connect"><strong>Google account</strong> — <span id="drive-account" class="muted">checking…</span>
+        <div class="row">
+          <button type="button" class="btn btn-primary" id="drive-connect" hidden>Connect Google Drive</button>
+          <button type="button" class="btn btn-small btn-danger" id="drive-disconnect" hidden>Disconnect</button>
+        </div>
+      </li>
+      <li id="step-folder"><strong>Upload folder</strong> — <span id="drive-folder" class="muted">not chosen</span>
+        <div class="row">
+          <button type="button" class="btn btn-primary" id="drive-pick" disabled>Choose Drive folder…</button>
+          <input type="text" id="drive-new-folder" placeholder="…or new folder name" maxlength="200">
+          <button type="button" class="btn btn-small" id="drive-create-folder" disabled>Create in My Drive</button>
+        </div>
+      </li>
+    </ol>
+    <p class="muted small">Permission used: <code>drive.file</code>. The app can only see files it uploads and the folder you pick;
+      it cannot read the rest of your Drive. Your sign-in is stored in Windows Credential Manager.</p>
+    <label class="check"><input type="checkbox" name="auto_upload" id="auto-upload"
+                                {{ 'checked' if settings.auto_upload }}>
+      Upload automatically after each download</label>
+    <p class="muted small" id="auto-upload-help">Automatic uploads require a connected Google account and a selected Drive folder.
+      Uploads use the independent upload queue, so failures do not affect downloaded files.</p>
+  </section>
+
+  <div class="row">
+    <button type="submit" class="btn btn-primary">Save settings</button>
+    <span id="settings-status" class="muted"></span>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+<script src="{{ url_for('static', filename='js/drive_settings.js') }}"></script>
+{% endblock %}
