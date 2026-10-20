@@ -5,6 +5,11 @@
 <form id="settings-form" class="settings" autocomplete="off">
   <section class="card">
     <h2>Storage</h2>
+    {% if docker_mode %}
+    <p>Download folder: <span class="path">{{ downloads_label }}</span></p>
+    <small class="muted">Running in Docker. To use a different folder, set <code>HOST_DOWNLOADS_DIR</code>
+      in the <code>.env</code> file and restart the app.</small>
+    {% else %}
     <label>Download folder
       <span class="row">
         <input type="text" name="download_dir" class="js-download-dir grow" value="{{ settings.download_dir }}" required>
@@ -14,6 +19,7 @@
       <small class="muted">Videos are saved in a sub-folder per channel. The folder is created if missing
         and checked for write access. Already-queued videos keep the folder they were queued with.</small>
     </label>
+    {% endif %}
     <p class="muted small">App data (database, logs, credentials): <span class="path">{{ data_dir }}</span></p>
   </section>
 

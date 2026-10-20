@@ -1,8 +1,7 @@
 import pytest
 import yt_dlp
 
-from services.youtube_service import (InputError, iter_source, normalize_entry,
-                                      parse_source_input, uploads_playlist_url)
+from services.youtube_service import InputError, iter_source, normalize_entry, parse_source_input
 
 SETTINGS = {"sleep_requests": 0, "max_retries": 1, "discovery_limit": 0, "js_runtime": "node"}
 
@@ -48,12 +47,6 @@ def test_channel_tabs_follow_settings():
 def test_parse_rejects_invalid(text):
     with pytest.raises(InputError):
         parse_source_input(text)
-
-
-def test_uploads_playlist_url():
-    assert uploads_playlist_url("UCHnyfMqiRRG1u-2MsSQLbXA") == \
-        "https://www.youtube.com/playlist?list=UUHnyfMqiRRG1u-2MsSQLbXA"
-    assert uploads_playlist_url("bad") is None
 
 
 def test_normalize_regular_entry():

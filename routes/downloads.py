@@ -6,6 +6,7 @@ from pathlib import Path
 
 from flask import Blueprint, current_app, jsonify, request
 
+import config
 from database import repository
 from routes.channels import _filter_from
 from services import queue_control
@@ -246,6 +247,9 @@ def open_folder():
             target = path.parent
         else:
             return jsonify(error="The file no longer exists."), 404
+    if config.IN_DOCKER:
+        return jsonify(error=f"Open {config.DOWNLOADS_LABEL} on your PC to see the files.",
+                       path=str(target)), 501
     if os.name != "nt":
         return jsonify(error="Opening folders is only supported on Windows.", path=str(target)), 501
     if select:

@@ -15,7 +15,7 @@ form.addEventListener("submit", async (e) => {
   status.textContent = "Saving…";
   try {
     const { settings } = await api("/api/settings", { method: "PUT", body });
-    form.elements.download_dir.value = settings.download_dir;
+    if (form.elements.download_dir) form.elements.download_dir.value = settings.download_dir;
     status.textContent = "Saved.";
     toast("Settings saved.");
   } catch (err) {

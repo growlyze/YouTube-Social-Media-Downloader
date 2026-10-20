@@ -108,7 +108,3 @@ def normalize_media_url(value: str) -> tuple[str, YtDlpAdapter]:
                               "Facebook, TikTok, and X (Twitter).")
     normalized = urlunsplit((parsed.scheme.lower(), parsed.netloc, parsed.path, parsed.query, ""))
     return normalized, adapter
-
-
-def adapter_for_url(value: str) -> YtDlpAdapter:
-    return normalize_media_url(value)[1]

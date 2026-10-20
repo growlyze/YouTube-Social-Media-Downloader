@@ -8,7 +8,6 @@ from flask import Blueprint, current_app, jsonify, redirect, request
 import config
 from database import repository
 from services import drive_auth, drive_service
-from services.drive_service import DriveError
 
 bp = Blueprint("drive", __name__)          # JSON API, mounted at /api
 oauth_bp = Blueprint("oauth", __name__)    # browser redirect target, mounted at /

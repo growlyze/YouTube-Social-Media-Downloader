@@ -107,14 +107,6 @@ def load_client_config(path=None) -> dict:
     return data
 
 
-def is_configured() -> bool:
-    try:
-        load_client_config()
-        return True
-    except AuthError:
-        return False
-
-
 def start_authorization() -> str:
     client = load_client_config()
     flow = Flow.from_client_config(client, scopes=SCOPES, redirect_uri=redirect_uri(),

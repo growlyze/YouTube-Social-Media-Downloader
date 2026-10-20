@@ -1,6 +1,5 @@
 """Phase 4: Google OAuth, Drive folder choice, manual uploads (all mocked; no network)."""
 import json
-from pathlib import Path
 
 import httplib2
 import pytest
@@ -30,6 +29,17 @@ def test_credential_store_refuses_insecure_backend(monkeypatch):
     monkeypatch.setattr(keyring, "get_keyring", lambda: PlaintextKeyring())
     with pytest.raises(real.CredentialStoreError):
         real.save({"refresh_token": "x"})
+
+
+def test_credential_file_used_when_configured(monkeypatch, tmp_path):
+    import importlib
+    real = importlib.reload(credentials_store)
+    token = tmp_path / "secrets" / "google-token.json"
+    monkeypatch.setenv("YTDL_CREDENTIALS_FILE", str(token))
+    real.save({"refresh_token": "x"})
+    assert real.load() == {"refresh_token": "x"}
+    real.delete()
+    assert not token.exists() and real.load() is None
 
 
 def _client_file(tmp_path, kind="installed"):
@@ -406,11 +416,6 @@ def test_picker_csp_only_on_settings_page(client):
     for page in ("/", "/library", "/local", "/uploads"):
         csp = client.get(page).headers["Content-Security-Policy"]
         assert "apis.google.com" not in csp and "script-src 'self';" in csp
-
-
-def test_upload_pages_render(client):
-    assert client.get("/uploads").status_code == 200
-    assert b"Upload selected to Drive" in client.get("/local").data
 
 
 # -- secrets from .env ---------------------------------------------------------

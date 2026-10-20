@@ -1,9 +1,13 @@
 {# Shared download-folder bar: shows where videos are saved, with two separate actions. #}
 <div class="destination">
   <span class="muted">Download folder:</span>
+{% if docker_mode %}
+  <span class="path js-download-dir destination-path">{{ downloads_label }}</span>
+{% else %}
   <span class="path js-download-dir destination-path">{{ settings.download_dir }}</span>
   <button type="button" class="btn btn-small js-open-folder"
           title="Open this folder in Windows Explorer to see your downloaded files">Open Folder</button>
   <button type="button" class="btn btn-small btn-primary js-choose-folder"
           title="Choose a different folder (any drive) where new downloads are saved">Browse…</button>
+{% endif %}
 </div>

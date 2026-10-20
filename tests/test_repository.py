@@ -103,7 +103,6 @@ def test_filters_paging_and_select_all(temp_db):
     changed = repository.set_selected_by_filter(VideoFilter(video_type="short"), True)
     assert changed == 6
     assert repository.query_videos(VideoFilter(selected_only=True))["total"] == 6
-    assert len(repository.get_selected_videos()) == 6
 
 
 def test_sort_order_is_whitelisted(temp_db):

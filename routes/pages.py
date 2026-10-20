@@ -1,6 +1,6 @@
 """HTML pages. Pages render a shell; data is loaded from the JSON API."""
 
-from flask import Blueprint, abort, current_app, render_template
+from flask import Blueprint, current_app, render_template
 
 import config
 from database import repository
@@ -8,9 +8,6 @@ from services import drive_auth, queue_control
 from services import runtime as runtime_tools
 
 bp = Blueprint("pages", __name__)
-
-# Pages planned for later phases; shown in the navigation as "coming soon".
-PLANNED: dict = {}
 
 
 @bp.get("/")
@@ -69,15 +66,3 @@ def settings_page():
                            runtimes=config.JS_RUNTIMES,
                            data_dir=config.DATA_DIR)
 
-
-@bp.get("/<page>")
-def planned(page):
-    if page not in PLANNED:
-        abort(404)
-    title, phase = PLANNED[page]
-    return render_template("coming_soon.html", active=page, title=title, phase=phase)
-
-
-@bp.app_context_processor
-def nav():
-    return {"planned_pages": PLANNED}

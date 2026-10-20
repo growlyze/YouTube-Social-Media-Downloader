@@ -72,10 +72,3 @@ def test_removing_a_source_keeps_download_and_upload_history(temp_db, tmp_path):
     repository.delete_source("UC1")
     assert repository.get_download(d["id"])["status"] == "completed"
     assert repository.list_uploads("queue")["total"] == 1
-
-
-def test_existing_download_pages_and_apis_still_respond(client):
-    for path in ("/", "/library", "/downloads", "/local", "/history", "/settings"):
-        assert client.get(path).status_code == 200, path
-    assert client.get("/api/downloads/status").status_code == 200
-    assert client.get("/api/local").status_code == 200

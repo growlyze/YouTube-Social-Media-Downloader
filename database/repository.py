@@ -22,6 +22,8 @@ def get_settings() -> dict:
         for row in conn.execute("SELECT key, value FROM settings"):
             if row["key"] in settings:
                 settings[row["key"]] = json.loads(row["value"])
+    if config.IN_DOCKER:
+        settings["download_dir"] = str(config.DOWNLOADS_DIR)
     return settings
 
 
@@ -316,15 +318,6 @@ def matching_video_ids(flt: VideoFilter, limit=10000):
             f"ORDER BY v.upload_date IS NULL, v.upload_date, v.video_id LIMIT ?",
             [*params, limit]).fetchall()
     return [r[0] for r in rows]
-
-
-def get_selected_videos(source_id=None, include_unavailable=False):
-    flt = VideoFilter(source_id=source_id, selected_only=True,
-                      availability="" if include_unavailable else "available")
-    where, params = flt.where()
-    with connect() as conn:
-        rows = conn.execute(f"SELECT v.* FROM videos v{where}", params).fetchall()
-    return [dict(r) for r in rows]
 
 
 def count_videos():

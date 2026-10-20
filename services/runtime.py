@@ -27,10 +27,6 @@ def _cached(key, finder):
     return value
 
 
-def clear_cache():
-    _cache.clear()
-
-
 def _ffmpeg_candidates():
     local = os.environ.get("LOCALAPPDATA", "")
     if local:

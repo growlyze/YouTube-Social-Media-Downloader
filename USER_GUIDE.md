@@ -27,7 +27,31 @@ TikTok, and X/Twitter public media links.
 - Allow enough free disk space for the videos you plan to download. The app does
   not delete local video files when you clear queue or history records.
 
-## Install and start
+## Start with Docker (easiest)
+
+With Docker, Python, Node.js, and FFmpeg come bundled in the app's image, so
+there is nothing else to install.
+
+1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+   and start it once.
+2. Double-click **`Start.bat`** in the project folder. The first start builds
+   the app and takes a few minutes; later starts take seconds. The browser opens
+   at <http://127.0.0.1:5000> when the app is ready.
+3. Double-click **`Stop.bat`** to stop it. Videos, settings, history, and the
+   Google sign-in are kept.
+
+Downloaded videos are saved to the `downloads` folder next to `Start.bat`. To use
+another folder, add a line such as `HOST_DOWNLOADS_DIR=D:/Videos` to `.env` and
+run `Start.bat` again. In Docker, the download folder is chosen only this way,
+so the in-app **Browse…** and **Open Folder** buttons are hidden.
+
+Docker keeps its own database, separate from a Python install of the app, so
+videos downloaded with one do not appear in the other's history. Google Drive
+setup works the same way (see below); put the Google values in `.env`, not
+`data\client_secret.json`. In Docker the Google sign-in is saved in the app's
+private data volume instead of Windows Credential Manager.
+
+## Install and start without Docker
 
 1. Install Python and Node.js if they are not already installed. Install
    FFmpeg as described above.
@@ -183,7 +207,8 @@ full, resolve the issue and resume or retry the upload.
 
 | Problem | What to try |
 |---|---|
-| The page will not open | Confirm `app.py` is still running in PowerShell and open `http://127.0.0.1:5000`. If the port is in use, set `YTDL_PORT` and restart the app. |
+| `Start.bat` says Docker is not running | Open Docker Desktop, wait until it shows "Engine running", then run `Start.bat` again. |
+| The page will not open | With Docker, run `docker compose logs` in the project folder. Without Docker, confirm `app.py` is still running in PowerShell and open `http://127.0.0.1:5000`. If the port is in use, set `YTDL_PORT` and restart the app. |
 | Many videos fail because FFmpeg is required | Install FFmpeg with `winget install Gyan.FFmpeg`, then retry failed items. |
 | JavaScript challenge or runtime error | Install Node.js or another supported runtime, select it in Settings, and update yt-dlp. |
 | Platform requests are paused | Wait for the cooldown shown in the banner, then press **Resume**. Discovery and downloads share this pause. |

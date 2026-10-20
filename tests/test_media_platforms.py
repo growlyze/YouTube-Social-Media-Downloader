@@ -1,6 +1,6 @@
 import pytest
 
-from services.media_platforms import MediaInputError, adapter_for_url, normalize_media_url
+from services.media_platforms import MediaInputError, normalize_media_url
 from services.media_service import MAX_COLLECTION_ITEMS, resolve_media_url
 
 
@@ -14,7 +14,7 @@ from services.media_service import MAX_COLLECTION_ITEMS, resolve_media_url
     ("https://twitter.com/example/status/123", "x"),
 ])
 def test_supported_platform_detection(url, platform):
-    assert adapter_for_url(url).key == platform
+    assert normalize_media_url(url)[1].key == platform
 
 
 @pytest.mark.parametrize("url", [

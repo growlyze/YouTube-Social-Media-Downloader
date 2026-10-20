@@ -17,10 +17,6 @@
     <a href="{{ url_for('pages.local_page') }}" class="{{ 'active' if active == 'local' }}">Local Files</a>
     <a href="{{ url_for('pages.history_page') }}" class="{{ 'active' if active == 'history' }}">Download History</a>
     <a href="{{ url_for('pages.uploads_page') }}" class="{{ 'active' if active == 'uploads' }}">Upload Queue</a>
-    {% for key, item in planned_pages.items() %}
-      <a href="{{ url_for('pages.planned', page=key) }}" class="soon {{ 'active' if active == key }}"
-         title="Coming in phase {{ item[1] }}">{{ item[0] }} <small>soon</small></a>
-    {% endfor %}
     <a href="{{ url_for('pages.settings_page') }}" class="{{ 'active' if active == 'settings' }}">Settings</a>
     <div class="sidebar-foot">Local only · 127.0.0.1</div>
   </nav>

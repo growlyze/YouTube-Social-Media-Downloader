@@ -96,6 +96,8 @@ def create_app(db_path=None, start_workers=True, discovery_worker=None, download
         resp.headers["X-Frame-Options"] = "DENY"
         resp.headers["X-Content-Type-Options"] = "nosniff"
         resp.headers["Referrer-Policy"] = "no-referrer"
+        # Revalidate every time so the browser never runs stale JS/CSS after an update.
+        resp.headers.setdefault("Cache-Control", "no-cache")
         if request.endpoint == "pages.settings_page":
             # The Google Picker (folder chooser) loads Google's script, injects
             # its own styled dialog and shows a Google-hosted frame. Only the
@@ -132,7 +134,8 @@ def create_app(db_path=None, start_workers=True, discovery_worker=None, download
 
     @app.context_processor
     def inject_globals():
-        return {"csrf_token": app.config["CSRF_TOKEN"]}
+        return {"csrf_token": app.config["CSRF_TOKEN"], "docker_mode": config.IN_DOCKER,
+                "downloads_label": config.DOWNLOADS_LABEL}
 
     app.register_blueprint(pages_bp)
     app.register_blueprint(channels_bp, url_prefix="/api")

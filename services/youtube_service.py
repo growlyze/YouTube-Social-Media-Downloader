@@ -29,9 +29,6 @@ HANDLE_RE = re.compile(r"^@[A-Za-z0-9._\-À-￿]{1,100}$")
 CHANNEL_ID_RE = re.compile(r"^UC[A-Za-z0-9_-]{22}$")
 PLAYLIST_ID_RE = re.compile(r"^(PL|UU|OL|FL|LL|RD|UUSH|UULF)[A-Za-z0-9_-]{2,80}$|^WL$")
 YOUTUBE_HOSTS = {"youtube.com", "www.youtube.com", "m.youtube.com", "music.youtube.com"}
-CHANNEL_TABS = {"videos", "shorts", "streams", "featured", "playlists", "live", "community"}
-
-TAB_TYPES = {"videos": "video", "shorts": "short", "streams": "live"}
 
 
 class InputError(ValueError):
@@ -107,13 +104,6 @@ def canonical_playlist_url(list_id_or_url: str) -> str:
     if "://" in list_id_or_url:
         list_id = (parse_qs(urlparse(list_id_or_url).query).get("list") or [""])[0]
     return f"https://www.youtube.com/playlist?list={list_id}"
-
-
-def uploads_playlist_url(channel_id: str) -> str | None:
-    """Every channel UCxxxx has an uploads playlist UUxxxx (all public uploads)."""
-    if channel_id and CHANNEL_ID_RE.match(channel_id):
-        return f"https://www.youtube.com/playlist?list=UU{channel_id[2:]}"
-    return None
 
 
 # --------------------------------------------------------------------------

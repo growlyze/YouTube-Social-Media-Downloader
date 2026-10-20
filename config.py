@@ -45,8 +45,13 @@ DOWNLOADS_DIR = Path(os.environ.get("YTDL_DOWNLOADS_DIR", BASE_DIR / "downloads"
 DB_PATH = DATA_DIR / "app.db"
 LOG_DIR = DATA_DIR / "logs"
 
-HOST = "127.0.0.1"
+HOST = os.environ.get("YTDL_HOST", "127.0.0.1")
 PORT = int(os.environ.get("YTDL_PORT", "5000"))
+
+# Set by the Docker image. Downloads then always go to the mounted DOWNLOADS_DIR,
+# and DOWNLOADS_LABEL is the matching folder on the host PC, shown in the pages.
+IN_DOCKER = os.environ.get("YTDL_IN_DOCKER") == "1"
+DOWNLOADS_LABEL = os.environ.get("YTDL_DOWNLOADS_LABEL", "").strip() or str(DOWNLOADS_DIR)
 
 # Values stored in the `settings` table on first run. Users change them from
 # the Settings page; code should read them through repository.get_settings().

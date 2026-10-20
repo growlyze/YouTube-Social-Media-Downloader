@@ -19,7 +19,26 @@ For requirements, installation, and step-by-step instructions, see the
 | 6 | Full documentation and troubleshooting | **Done** |
 | 7 | Public single-link and supported collection downloads across social platforms | **Done** |
 
-## Setup (Windows)
+## Quick start with Docker
+
+Install [Docker Desktop](https://www.docker.com/products/docker-desktop/), then
+double-click **`Start.bat`**. It builds the image (Python, Node.js and FFmpeg
+included), starts the container and opens <http://127.0.0.1:5000>. **`Stop.bat`**
+stops it.
+
+| | Docker |
+|---|---|
+| Videos | `downloads\` next to `Start.bat`, or `HOST_DOWNLOADS_DIR` in `.env` |
+| Database, logs, Google sign-in | Docker volume `app-data` (kept across restarts and rebuilds) |
+| Port | Published on `127.0.0.1` only; change with `YTDL_PORT` in `.env` |
+
+Google values (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_API_KEY`,
+`GOOGLE_PROJECT_NUMBER`) are read from `.env`. The container stores the Drive
+refresh token in its data volume (owner-only file) because there is no Windows
+Credential Manager inside Linux. Docker uses its own database, separate from a
+Python install of the app.
+
+## Setup without Docker (Windows)
 
 1. Python 3.11+ (3.13 tested) and Node.js (yt-dlp uses it to solve YouTube's
    JavaScript challenges; you can choose Deno/Bun/QuickJS in Settings instead).

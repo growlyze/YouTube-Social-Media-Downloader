@@ -33,7 +33,6 @@ class DiscoveryWorker:
         self._cancel_ids: set[int] = set()
         self._lock = threading.Lock()
         self._thread: threading.Thread | None = None
-        self.current_job_id: int | None = None
 
     # -- lifecycle ---------------------------------------------------------
 
@@ -89,7 +88,6 @@ class DiscoveryWorker:
 
     def run_job(self, job: dict):
         job_id = job["id"]
-        self.current_job_id = job_id
         repository.update_discovery_job(job_id, status="running", started_at=_now(),
                                         message="Starting…", error_kind=None)
         settings = repository.get_settings()
@@ -168,4 +166,3 @@ class DiscoveryWorker:
         finally:
             with self._lock:
                 self._cancel_ids.discard(job_id)
-            self.current_job_id = None

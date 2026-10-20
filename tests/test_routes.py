@@ -11,11 +11,16 @@ def _seed():
 
 
 def test_pages_render(client):
-    for path in ("/", "/library", "/settings", "/downloads", "/uploads"):
+    for path in ("/", "/library", "/settings", "/downloads", "/local", "/history", "/uploads"):
         resp = client.get(path)
         assert resp.status_code == 200, path
         assert b'name="csrf-token"' in resp.data
     assert client.get("/nope").status_code == 404
+    downloads = client.get("/downloads").data
+    assert b"media-url-form" in downloads and b"Instagram" in downloads and b"TikTok" in downloads
+    assert b"Upload selected to Drive" in client.get("/local").data
+    assert client.get("/api/downloads/status").status_code == 200
+    assert client.get("/api/local").status_code == 200
 
 
 def test_security_headers(client):
@@ -120,3 +125,17 @@ def test_resume_clears_pause(client, csrf):
     queue_control.pause("rate_limited", "slow", cooldown_minutes=10)
     assert client.get("/api/queue/pause").get_json()["paused"] is True
     assert client.post("/api/queue/resume", headers=csrf).get_json()["paused"] is False
+
+
+def test_docker_mode_pins_download_folder(client, csrf, monkeypatch, tmp_path):
+    import config
+    monkeypatch.setattr(config, "IN_DOCKER", True)
+    monkeypatch.setattr(config, "DOWNLOADS_DIR", tmp_path / "mounted")
+    monkeypatch.setattr(config, "DOWNLOADS_LABEL", "D:/Videos")
+    resp = client.put("/api/settings", json={"download_dir": str(tmp_path / "elsewhere")}, headers=csrf)
+    assert resp.status_code == 200
+    assert resp.get_json()["settings"]["download_dir"] == str(tmp_path / "mounted")
+    assert client.post("/api/settings/pick-folder", headers=csrf).status_code == 501
+    assert client.post("/api/folders/list", json={}, headers=csrf).status_code == 501
+    page = client.get("/settings").data
+    assert b"D:/Videos" in page and b"js-choose-folder" not in page

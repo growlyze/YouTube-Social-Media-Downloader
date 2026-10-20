@@ -1,0 +1,24 @@
+services:
+  downloader:
+    build: .
+    image: local-media-downloader
+    container_name: local-media-downloader
+    restart: unless-stopped
+    ports:
+      # 127.0.0.1 only: the app is never reachable from other computers.
+      - "127.0.0.1:${YTDL_PORT:-5000}:${YTDL_PORT:-5000}"
+    environment:
+      YTDL_PORT: ${YTDL_PORT:-5000}
+      YTDL_DOWNLOADS_LABEL: ${HOST_DOWNLOADS_DIR:-downloads folder next to Start.bat}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      GOOGLE_PROJECT_NUMBER: ${GOOGLE_PROJECT_NUMBER:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+    volumes:
+      # Database, logs and the Google sign-in token.
+      - app-data:/data
+      # Downloaded videos, saved straight to a folder on this PC.
+      - ${HOST_DOWNLOADS_DIR:-./downloads}:/downloads
+
+volumes:
+  app-data:

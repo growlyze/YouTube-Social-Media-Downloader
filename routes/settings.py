@@ -13,6 +13,9 @@ from services.folder_picker import validate_destination
 
 bp = Blueprint("settings", __name__)
 
+DOCKER_FOLDER_MESSAGE = ("In Docker the download folder is set with HOST_DOWNLOADS_DIR in .env; "
+                         "restart the app after changing it.")
+
 _NUMBERS = {
     # key: (type, min, max)
     "sleep_requests": (float, 0, 60),
@@ -65,7 +68,7 @@ def validate_settings(body: dict, current: dict | None = None) -> tuple[dict, li
             errors.append("The Google Cloud project number is digits only (not the project ID).")
         else:
             clean["google_project_number"] = value
-    if "download_dir" in body:
+    if "download_dir" in body and not config.IN_DOCKER:   # fixed volume in Docker
         path, error = validate_destination(body["download_dir"])
         if error:
             errors.append(error)
@@ -107,6 +110,8 @@ def put_settings():
 def folders_list():
     """List drives plus the sub-folders of `path` (default: current download
     folder). POST + CSRF so other websites can neither call nor read it."""
+    if config.IN_DOCKER:
+        return jsonify(error=DOCKER_FOLDER_MESSAGE), 501
     body = request.get_json(silent=True) or {}
     current = repository.get_settings()["download_dir"]
     path = body.get("path") or (current if os.path.isdir(current) else None)
@@ -123,6 +128,8 @@ def folders_list():
 
 @bp.post("/folders/create")
 def folders_create():
+    if config.IN_DOCKER:
+        return jsonify(error=DOCKER_FOLDER_MESSAGE), 501
     body = request.get_json(silent=True) or {}
     try:
         path = folder_browser.create_folder(body.get("parent"), body.get("name"))
@@ -135,6 +142,8 @@ def folders_create():
 def pick_folder():
     """Open the native folder dialog on this PC. Returns the chosen path but
     does not save it; the page asks the user to confirm, then PUTs settings."""
+    if config.IN_DOCKER:
+        return jsonify(error=DOCKER_FOLDER_MESSAGE), 501
     current = repository.get_settings()["download_dir"]
     try:
         path = folder_picker.pick_folder(current)

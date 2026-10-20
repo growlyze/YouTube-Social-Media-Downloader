@@ -54,7 +54,6 @@ h2 { font-size: 15px; margin: 0 0 10px; }
 .sidebar a { color: #cfd4dc; text-decoration: none; padding: 9px 18px; border-left: 3px solid transparent; }
 .sidebar a:hover { background: rgba(255,255,255,.05); }
 .sidebar a.active { border-left-color: var(--accent); background: rgba(255,255,255,.08); color: #fff; }
-.sidebar a.soon { color: #7f8796; }
 .sidebar a small { font-size: 10px; text-transform: uppercase; opacity: .7; margin-left: 4px; }
 .sidebar-foot { margin-top: auto; padding: 0 18px; font-size: 11px; color: #7f8796; }
 .content { flex: 1; padding: 22px 26px 40px; min-width: 0; }

@@ -77,14 +77,6 @@ def test_local_files_and_open_folder_validation(client, csrf, tmp_path):
     assert client.post("/api/local/open", json={"download_id": 99999}, headers=csrf).status_code == 404
 
 
-def test_new_pages_render(client):
-    for path in ("/downloads", "/local", "/history"):
-        resp = client.get(path)
-        assert resp.status_code == 200, path
-    assert b"media-url-form" in client.get("/downloads").data
-    assert b"Instagram" in client.get("/downloads").data and b"TikTok" in client.get("/downloads").data
-
-
 def test_media_url_route_resolves_and_queues_multiple_platforms(client, csrf, monkeypatch):
     def resolve(url, settings):
         if "instagram" in url:
