@@ -23,7 +23,7 @@ def test_enqueue_from_selection_and_deselect(client, csrf):
     resp = client.post("/api/downloads/enqueue", json={"from_selection": True, "filters": {"source": "UC1"}},
                        headers=csrf)
     body = resp.get_json()
-    assert resp.status_code == 200 and body["added"] == 2 and body["queue_running"] is False
+    assert resp.status_code == 200 and body["added"] == 2 and body["queue_running"] is True  # auto-start
     assert repository.count_videos()["selected"] == 0
     again = client.post("/api/downloads/enqueue", json={"video_ids": ["v0000000000"]}, headers=csrf).get_json()
     assert again["already_queued"] == 1

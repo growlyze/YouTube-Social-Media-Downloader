@@ -2,6 +2,7 @@
 from pathlib import Path
 
 from database import repository
+from services import space_service
 from services.drive_service import DriveError
 from workers.download_worker import DownloadWorker
 from workers.upload_worker import PAUSE_KEY, UploadWorker
@@ -34,7 +35,7 @@ def test_downloads_still_work_while_uploads_are_paused_by_an_error(temp_db, tmp_
     def failing(*a, **k):
         raise DriveError("quota", "Drive full", pause=True)
     UploadWorker(uploader=failing).run_job(repository.claim_next_upload())
-    assert repository.get_state(PAUSE_KEY)
+    assert space_service.uploads_blocked()      # a full Drive waits for space by itself
 
     # downloading is unaffected: the next video downloads normally
     downloads.run_job(repository.claim_next_download())

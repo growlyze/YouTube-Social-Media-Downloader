@@ -3,6 +3,10 @@
 Jobs are rows in `discovery_jobs`; the HTTP request that creates a job returns
 immediately and the UI polls the job for progress. Only one job runs at a time
 so discovery never issues parallel requests to YouTube.
+
+When a discovery job completes, `on_discovered(source_id)` (wired up in app.py)
+queues every discovered video that is not downloaded yet and starts the download
+queue, so adding a channel or playlist starts downloading automatically.
 """
 
 import logging
@@ -25,9 +29,10 @@ def _now():
 
 
 class DiscoveryWorker:
-    def __init__(self, source_iterator=iter_source, poll_seconds=2.0):
+    def __init__(self, source_iterator=iter_source, poll_seconds=2.0, on_discovered=None):
         self._iter_source = source_iterator
         self._poll = poll_seconds
+        self._on_discovered = on_discovered
         self._wake = threading.Event()
         self._stop = threading.Event()
         self._cancel_ids: set[int] = set()
@@ -131,6 +136,7 @@ class DiscoveryWorker:
                                             found_count=found,
                                             message=f"Found {found} item(s){note}.")
             log.info("Discovery job %s completed: %d items", job_id, found)
+            self._auto_download(source_id)
 
         except DiscoveryCancelled:
             if source_id:
@@ -166,3 +172,12 @@ class DiscoveryWorker:
         finally:
             with self._lock:
                 self._cancel_ids.discard(job_id)
+
+    def _auto_download(self, source_id):
+        """Queue everything this source found and start the download queue."""
+        if not source_id or not self._on_discovered:
+            return
+        try:
+            self._on_discovered(source_id)
+        except Exception:
+            log.exception("Automatic download after discovery failed for %s", source_id)

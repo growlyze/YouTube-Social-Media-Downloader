@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Space Check · Media Downloader{% endblock %}
+{% block content %}
+<h1>Space Check</h1>
+<p class="muted">Downloads and uploads stop when free space is low and continue automatically when
+  space is free again. A check runs every <strong id="sc-interval">60</strong> minutes by itself;
+  the button below checks <em>now</em> and continues the queues without waiting.</p>
+
+<section class="card queue-bar">
+  <div class="queue-state">
+    <span id="sc-pill" class="pill">…</span>
+    <span id="sc-summary" class="muted"></span>
+  </div>
+  <div class="row">
+    <button type="button" class="btn btn-primary" id="sc-recheck">Recheck space and continue</button>
+  </div>
+  <p class="muted small">Last check: <span id="sc-last">never</span> · Next automatic check:
+    <span id="sc-next">…</span></p>
+</section>
+
+<section class="card">
+  <h2>1 · Local space <span class="muted small">downloads</span></h2>
+  <div class="queue-state">
+    <span id="local-pill" class="pill">…</span>
+    <span id="local-summary" class="muted"></span>
+  </div>
+  <div class="progress"><div class="progress-bar" id="local-bar"></div></div>
+  <p class="muted small" id="local-detail"></p>
+</section>
+
+<section class="card">
+  <h2>2 · Google Drive space <span class="muted small">uploads</span></h2>
+  <div class="queue-state">
+    <span id="drive-pill" class="pill">…</span>
+    <span id="drive-summary" class="muted"></span>
+  </div>
+  <div class="progress"><div class="progress-bar" id="drive-bar"></div></div>
+  <p class="muted small" id="drive-detail"></p>
+</section>
+
+<section class="card">
+  <h2>3 · Recheck space and continue</h2>
+  <p class="muted small">Pressing the button re-checks the local disk and Google Drive right now and
+    continues the queues if space is available. You can also
+    <a href="{{ url_for('pages.settings_page') }}">change the Space Check settings</a>
+    (stop threshold and how often the check runs).</p>
+  <div class="row">
+    <button type="button" class="btn btn-primary" id="sc-recheck-2">Recheck space and continue</button>
+    <span id="sc-check-status" class="muted"></span>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Status</h2>
+  <div class="queue-state">
+    <span id="dl-pill" class="pill">…</span>
+    <span class="muted">Download queue</span>
+    <span id="dl-summary" class="muted"></span>
+  </div>
+  <div class="queue-state">
+    <span id="up-pill" class="pill">…</span>
+    <span class="muted">Upload queue</span>
+    <span id="up-summary" class="muted"></span>
+  </div>
+</section>
+
+<section class="card">
+  <h2>What happened</h2>
+  <ul id="sc-events" class="sc-events"></ul>
+  <p id="sc-events-empty" class="muted" hidden>No space events yet. This list records when the app
+    stopped and continued downloads/uploads by itself.</p>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/space.js') }}"></script>{% endblock %}

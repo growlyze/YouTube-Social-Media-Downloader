@@ -11,6 +11,7 @@ from database import repository
 from routes.channels import _filter_from
 from services import queue_control
 from services import runtime as runtime_tools
+from services import space_service
 from services.download_service import is_inside
 from services.errors import classify_error
 from services.media_platforms import MediaInputError, normalize_media_url
@@ -41,11 +42,13 @@ def _page_args():
 @bp.get("/downloads/status")
 def status():
     settings = repository.get_settings()
+    space_service.refresh_local()
     return jsonify(
         queue=_worker().snapshot(),
         counts=repository.download_counts(),
         active=repository.list_downloads("queue", page_size=5)["items"],
         pause=queue_control.status(),
+        space=space_service.status_payload(),
         runtime=runtime_tools.status(settings.get("js_runtime", "node")),
         next_retry_at=repository.next_retry_time(),
     )
@@ -84,6 +87,10 @@ def enqueue():
         download_dir=settings["download_dir"])
     if body.get("from_selection") and result["queued_ids"]:
         repository.set_selected(result["queued_ids"], False)
+    if result["added"]:
+        # Queueing work starts downloading automatically; the Pause button
+        # still stops the queue at any time.
+        _worker().start_queue()
     _worker().wake()
     result["queue_running"] = _worker().is_running()
     result.pop("queued_ids")
@@ -146,6 +153,8 @@ def enqueue_url():
     result = repository.enqueue_downloads(
         list(media), include_shorts=settings.get("include_shorts", True),
         include_live=settings.get("include_streams", False), download_dir=settings["download_dir"])
+    if result["added"]:
+        _worker().start_queue()
     _worker().wake()
     result["queue_running"] = _worker().is_running()
     result["expanded"] = len(media)

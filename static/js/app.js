@@ -210,10 +210,22 @@ function renderPause(pause) {
     : "The suggested wait has passed; you can resume.";
 }
 
+// Low free space (local disk or Google Drive) stops a queue; the Space Check
+// page continues it automatically once a check finds space again.
+function renderSpaceBanner(space) {
+  const banner = document.getElementById("space-banner");
+  const blocked = space && (space.local_pause?.paused || space.drive_pause?.paused);
+  if (!blocked) { banner.hidden = true; return; }
+  banner.hidden = false;
+  const message = space.local_pause?.paused ? space.local_pause.message : space.drive_pause?.message;
+  document.getElementById("space-banner-message").textContent = message || "";
+}
+
 async function refreshPause() {
   try {
     const status = await api("/api/downloads/status");
     renderPause(status.pause);
+    renderSpaceBanner(status.space);
     const queued = status.counts.pending + status.counts.downloading;
     const badge = document.getElementById("nav-queue-count");
     badge.hidden = queued === 0;

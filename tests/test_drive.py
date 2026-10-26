@@ -7,7 +7,7 @@ from googleapiclient.errors import HttpError
 
 import config
 from database import repository
-from services import credentials_store, drive_auth, drive_service
+from services import credentials_store, drive_auth, drive_service, space_service
 from services.drive_service import DriveError, UploadCancelled
 from workers.upload_worker import PAUSE_KEY, UploadWorker
 
@@ -322,9 +322,16 @@ def test_upload_failures_never_mark_download_failed(temp_db, tmp_path, error, ex
     worker.run_job(repository.claim_next_upload())
     up = repository.list_uploads("queue" if expected_status == "pending" else "failed")["items"][0]
     assert up["status"] == expected_status
-    assert bool(repository.get_state(PAUSE_KEY)) is paused
+    if getattr(error, "kind", "") == "quota":
+        # A full Drive pauses uploads on its own (no manual Resume needed) and
+        # continues automatically when a space check finds free space again.
+        assert not repository.get_state(PAUSE_KEY)
+        assert space_service.uploads_blocked() is True
+        assert worker.is_running() is False
+    else:
+        assert bool(repository.get_state(PAUSE_KEY)) is paused
     assert repository.get_download(d["id"])["status"] == "completed"   # the key guarantee
-    if paused:
+    if paused and getattr(error, "kind", "") != "quota":
         assert worker.is_running() is False
         worker.start_queue()
         assert worker.is_running() is True

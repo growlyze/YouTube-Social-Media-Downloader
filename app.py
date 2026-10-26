@@ -11,15 +11,17 @@ from logging.handlers import RotatingFileHandler
 from flask import Flask, abort, jsonify, request
 
 import config
-from database import db
+from database import db, repository
 from routes.channels import bp as channels_bp
 from routes.downloads import bp as downloads_bp
 from routes.drive import bp as drive_bp
 from routes.drive import oauth_bp
 from routes.pages import bp as pages_bp
 from routes.settings import bp as settings_bp
+from routes.space import bp as space_bp
 from workers.discovery_worker import DiscoveryWorker
 from workers.download_worker import DownloadWorker
+from workers.space_worker import SpaceCheckWorker
 from workers.upload_worker import UploadWorker
 
 
@@ -57,22 +59,51 @@ def setup_logging():
     logging.getLogger("werkzeug").setLevel(logging.WARNING)
 
 
+def auto_download_source(source_id, download_worker):
+    """Queue every discovered video of a channel/playlist and start the queue.
+
+    Adding a channel or playlist therefore starts downloading by itself.
+    Videos that are already queued, downloaded, or unavailable are skipped by
+    `enqueue_downloads`, so re-discovering a source adds only what is new."""
+    settings = repository.get_settings()
+    ids = repository.matching_video_ids(
+        repository.VideoFilter(source_id=source_id, availability="available"), limit=100000)
+    added = 0
+    for start in range(0, len(ids), 5000):
+        result = repository.enqueue_downloads(
+            ids[start:start + 5000],
+            include_shorts=settings.get("include_shorts", True),
+            include_live=settings.get("include_streams", False),
+            download_dir=settings["download_dir"])
+        added += result["added"]
+    if added:
+        logging.getLogger("app").info(
+            "Auto-queued %d video(s) from %s; starting the download queue", added, source_id)
+        download_worker.start_queue()
+        download_worker.wake()
+    return added
+
+
 def create_app(db_path=None, start_workers=True, discovery_worker=None, download_worker=None,
-               upload_worker=None):
+               upload_worker=None, space_worker=None):
     app = Flask(__name__)
     app.config["CSRF_TOKEN"] = secrets.token_urlsafe(32)
     app.config["JSON_SORT_KEYS"] = False
 
     db.init_db(db_path or config.DB_PATH)
 
-    app.extensions["discovery_worker"] = discovery_worker or DiscoveryWorker()
     app.extensions["upload_worker"] = upload_worker or UploadWorker()
     app.extensions["download_worker"] = download_worker or DownloadWorker(
         upload_waker=app.extensions["upload_worker"].wake)
+    app.extensions["discovery_worker"] = discovery_worker or DiscoveryWorker(
+        on_discovered=lambda source_id: auto_download_source(
+            source_id, app.extensions["download_worker"]))
+    app.extensions["space_worker"] = space_worker or SpaceCheckWorker()
     if start_workers:
         app.extensions["discovery_worker"].start()
         app.extensions["download_worker"].start()
         app.extensions["upload_worker"].start()
+        app.extensions["space_worker"].start()
 
     allowed_hosts = {f"127.0.0.1:{config.PORT}", f"localhost:{config.PORT}",
                      "127.0.0.1", "localhost"}
@@ -143,6 +174,7 @@ def create_app(db_path=None, start_workers=True, discovery_worker=None, download
     app.register_blueprint(drive_bp, url_prefix="/api")
     app.register_blueprint(oauth_bp)
     app.register_blueprint(settings_bp, url_prefix="/api")
+    app.register_blueprint(space_bp, url_prefix="/api")
     return app
 
 

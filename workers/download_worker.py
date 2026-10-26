@@ -7,6 +7,8 @@
   backoff (1, 2, 4… minutes, capped at 30).
 * Rate limits / verification checks pause automated platform requests and the
   job goes back to pending untouched; nothing resumes until the user does.
+* Low free disk space (or a full Google Drive for uploads) stops the queue the
+  same way, but a Space Check continues it automatically once space is back.
 * The user's Start/Pause switch is stored in SQLite. After a restart the queue
   comes back paused so nothing starts downloading unexpectedly.
 """
@@ -19,7 +21,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from database import repository
-from services import queue_control
+from services import queue_control, space_service
 from services.download_service import (FFmpegRequired, IntegrityError, SkippedVideo,
                                        StopRequested, download_video, find_existing_file,
                                        remove_partial_files)
@@ -147,7 +149,7 @@ class DownloadWorker:
             self._sleep(self._poll)
 
     def _claim(self):
-        if not self.is_running() or queue_control.is_paused():
+        if not self.is_running() or queue_control.is_paused() or space_service.downloads_blocked():
             return None
         settings = repository.get_settings()
         with self._lock:
@@ -164,7 +166,8 @@ class DownloadWorker:
         with self._lock:
             if download_id in self._cancel_ids:
                 return "cancel"
-        if self._stop.is_set() or not self.is_running_cached() or self._platform_paused():
+        if (self._stop.is_set() or not self.is_running_cached() or self._platform_paused()
+                or space_service.downloads_blocked()):
             return "pause"
         return None
 
@@ -265,6 +268,17 @@ class DownloadWorker:
 
             if info.pause_queue:
                 self._pause_everything(job, info.kind, info.message, detail)
+            elif info.kind == "disk":
+                # Out of disk space: wait for free space instead of failing the
+                # video. The space check continues the queue automatically and
+                # the job is retried from its partial file without using up a
+                # retry attempt.
+                space_service.pause_for_disk_error(info.message, detail)
+                repository.update_download(
+                    job["id"], status="pending", stage=None, speed=None, eta=None, started_at=None,
+                    error_kind="disk",
+                    error_message=f"{info.message} This video will be retried automatically when "
+                                  "free space is available again.")
             elif info.kind == "forbidden":
                 self._consecutive_forbidden += 1
                 if self._consecutive_forbidden >= FORBIDDEN_PAUSE_THRESHOLD:

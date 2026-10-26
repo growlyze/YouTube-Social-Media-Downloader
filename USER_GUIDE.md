@@ -134,6 +134,9 @@ client, the Google Drive API, and—when using the folder picker—the Google Pi
 API. The app requests the `drive.file` permission rather than access to all of
 your Drive.
 
+For a concise checklist showing where to get each Google Cloud value, see
+[Google Drive setup](GOOGLE_DRIVE_SETUP.md).
+
 ### Configure Google Cloud
 
 1. Create a project in the [Google Cloud Console](https://console.cloud.google.com).

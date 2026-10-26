@@ -19,7 +19,7 @@ import time
 from datetime import datetime, timedelta, timezone
 
 from database import repository
-from services import drive_service
+from services import drive_service, space_service
 from services.drive_service import DriveError, UploadCancelled
 from workers.download_worker import retry_delay_seconds
 
@@ -65,7 +65,9 @@ class UploadWorker:
     # -- controls ----------------------------------------------------------
 
     def is_running(self):
-        return bool(repository.get_state(RUNNING_KEY, True)) and not repository.get_state(PAUSE_KEY)
+        return (bool(repository.get_state(RUNNING_KEY, True))
+                and not repository.get_state(PAUSE_KEY)
+                and not space_service.uploads_blocked())
 
     def start_queue(self):
         repository.set_state(RUNNING_KEY, True)
@@ -166,6 +168,16 @@ class UploadWorker:
             self.current_id = None
 
     def _handle_failure(self, item, err: DriveError):
+        if err.kind == "quota":
+            # Google Drive is full: wait for free space instead of failing the
+            # upload. A Space Check continues the queue automatically once the
+            # drive has space again (no user action needed).
+            space_service.pause_for_quota(str(err))
+            repository.update_upload(item["id"], status="pending", speed=None, started_at=None,
+                                     error_kind=err.kind,
+                                     error_message=f"{err} The upload will be retried automatically "
+                                                   "when Google Drive has free space again.")
+            return
         if err.pause:
             repository.set_state(PAUSE_KEY, {"kind": err.kind, "message": str(err)})
             repository.update_upload(item["id"], status="pending", speed=None, started_at=None,

@@ -50,6 +50,12 @@ def uploads_page():
                            settings=repository.get_settings())
 
 
+@bp.get("/space")
+def space_page():
+    return render_template("space.html", active="space",
+                           settings=repository.get_settings())
+
+
 @bp.get("/library")
 def library():
     return render_template("library.html", active="library",

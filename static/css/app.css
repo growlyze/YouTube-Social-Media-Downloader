@@ -227,6 +227,7 @@ code { font-family: Consolas, monospace; font-size: 12px; background: var(--bg);
 .pill-cancelled { color: var(--muted); }
 .pill-downloading { color: var(--accent); }
 .history-table th:nth-child(1) { width: 34%; }
+.sc-events { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
 .files-table .col-check { width: 34px; }
 .files-table th:nth-child(2) { width: 34%; }
 .files-table th:nth-child(3) { width: 110px; }

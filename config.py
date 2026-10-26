@@ -81,6 +81,12 @@ DEFAULT_SETTINGS = {
     "include_streams": False,
     # JavaScript runtime yt-dlp uses to solve YouTube challenges.
     "js_runtime": "node",
+    # Space Check: stop downloads (local disk) or uploads (Google Drive) when
+    # free space is below this percentage, and continue when a re-check finds
+    # space again. See services/space_service.py.
+    "space_check_enabled": True,
+    "space_min_free_percent": 5.0,
+    "space_recheck_minutes": 60,
 }
 
 CLIENT_SECRET_PATH = DATA_DIR / "client_secret.json"

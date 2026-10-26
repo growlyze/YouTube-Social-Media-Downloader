@@ -6,7 +6,8 @@ discovery, a shared queue, and optional Google Drive uploads. It runs on your PC
 at <http://127.0.0.1:5000> and binds only to localhost.
 
 For requirements, installation, and step-by-step instructions, see the
-[User Guide](USER_GUIDE.md).
+[User Guide](USER_GUIDE.md). For the Google Cloud values needed for Drive
+uploads, see the [Google Drive setup](GOOGLE_DRIVE_SETUP.md).
 
 ## Status
 
@@ -79,9 +80,11 @@ it may contain Google client secrets.
 ## Downloading
 
 1. In the Channel Library, select videos and press **Download selected**.
-2. On **Download Queue**, press **Start queue**. The queue starts paused, and it
-   also comes back paused after an app restart, so nothing downloads unexpectedly.
-3. Files are saved as
+   Adding a channel or playlist **starts downloading automatically**: when
+   discovery finishes, every discovered video that is not downloaded yet is
+   queued and the queue starts by itself. The same happens for links added on
+   **Download Queue**. Press **Pause queue** at any time to stop.
+2. Files are saved as
    `<download folder>\<Channel>\[Shorts\|Live\]<YYYY-MM-DD> - <title> [<media id>].<ext>`.
 
 How the queue behaves:
@@ -181,6 +184,29 @@ platform's terms and applicable copyright rules.
   Google Drive and selecting a folder. If the connection later expires, downloads
   still complete; the upload queue reports the error and can be resumed after
   reconnecting.
+
+## Space Check (automatic stop and continue)
+
+The sidebar's **Space Check** page watches free space and runs everything by
+itself:
+
+- **1 · Local space.** Downloads stop when free space on the download drive
+  drops below the threshold (default: 5% free, change in Settings) and continue
+  automatically when a check finds space again. A video that hits a full disk
+  goes back to the queue without using up a retry and resumes from its partial
+  file.
+- **2 · Google Drive space.** Uploads stop when your Drive storage drops below
+  the same threshold and continue automatically once Drive has space again
+  (empty the trash or delete files; the check notices by itself).
+- **3 · Recheck space and continue.** The check runs automatically every 60
+  minutes (configurable). The button on the page runs it **immediately** —
+  no waiting — and continues the queues wherever space allows.
+
+The page also shows both spaces with usage bars, the queue status, and a log of
+every automatic stop/continue. A banner appears on all pages while a queue is
+waiting for space. Space pauses are separate from rate-limit pauses: those
+still need **Resume**, while space resumes by itself. Turn the whole feature
+off in **Settings → Space Check**.
 
 ## Rate limits
 

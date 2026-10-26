@@ -25,13 +25,15 @@ _NUMBERS = {
     "max_concurrent_downloads": (int, 1, 3),
     "rate_limit_cooldown_minutes": (int, 5, 1440),
     "discovery_limit": (int, 0, 100000),
+    "space_min_free_percent": (float, 0.5, 50),
+    "space_recheck_minutes": (int, 5, 1440),
 }
 _CHOICES = {
     "video_quality": config.VIDEO_QUALITIES,
     "video_container": config.VIDEO_CONTAINERS,
     "js_runtime": config.JS_RUNTIMES,
 }
-_BOOLS = ("auto_upload", "include_shorts", "include_streams")
+_BOOLS = ("auto_upload", "include_shorts", "include_streams", "space_check_enabled")
 
 
 def validate_settings(body: dict, current: dict | None = None) -> tuple[dict, list[str]]:

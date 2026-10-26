@@ -82,6 +82,26 @@
     </div>
   </section>
 
+  <section class="card">
+    <h2>Space Check</h2>
+    <p class="muted small">When free space runs out, downloads (local disk) or uploads (Google Drive)
+      stop on their own and continue automatically as soon as a check finds space again. Use the
+      <a href="{{ url_for('pages.space_page') }}">Space Check</a> page to see both spaces and to run
+      a check immediately.</p>
+    <div class="grid2">
+      <label class="check"><input type="checkbox" name="space_check_enabled" {{ 'checked' if settings.space_check_enabled }}>
+        Check free space automatically</label>
+      <label>Stop when free space falls below (% of the drive)
+        <input type="number" name="space_min_free_percent" min="0.5" max="50" step="0.5" value="{{ settings.space_min_free_percent }}">
+        <small class="muted">Google Drive uploads stop when your Drive storage drops below this too.</small>
+      </label>
+      <label>Recheck automatically every (minutes)
+        <input type="number" name="space_recheck_minutes" min="5" max="1440" value="{{ settings.space_recheck_minutes }}">
+        <small class="muted">A re-check continues stopped downloads/uploads by itself once space is free.</small>
+      </label>
+    </div>
+  </section>
+
   <section class="card" id="drive">
     <h2>Google Drive</h2>
     <ol class="setup-steps" id="drive-steps">
