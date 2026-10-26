@@ -57,7 +57,7 @@ DOWNLOADS_LABEL = os.environ.get("YTDL_DOWNLOADS_LABEL", "").strip() or str(DOWN
 # the Settings page; code should read them through repository.get_settings().
 DEFAULT_SETTINGS = {
     "download_dir": str(DOWNLOADS_DIR),
-    "video_quality": "1080p",
+    "video_quality": "720p",
     "video_container": "mp4",
     # Seconds slept between yt-dlp HTTP requests during extraction.
     "sleep_requests": 1.0,
