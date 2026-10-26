@@ -135,7 +135,7 @@ def is_inside(path: Path, folder: Path) -> bool:
 
 def format_options(settings: dict, has_ffmpeg: bool) -> tuple[dict, str]:
     """yt-dlp format options for the configured quality/container."""
-    quality = settings.get("video_quality", "720p")
+    quality = settings.get("video_quality", "1080p")
     container = settings.get("video_container", "mp4")
     height = int(quality[:-1]) if quality.endswith("p") and quality[:-1].isdigit() else None
 
